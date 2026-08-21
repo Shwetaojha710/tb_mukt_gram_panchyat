@@ -1,0 +1,143 @@
+<div class="page">
+  <div class="page-head d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+      <h1>{{ title }}</h1>
+      <p>Filters, KPIs, rankings and exports</p>
+    </div>
+    <button class="btn btn-success" type="button" (click)="exportExcel()">Download Excel</button>
+  </div>
+
+  <div class="card panel mb-3">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-2">
+        <label class="form-label">Year</label>
+        <input class="form-control" type="number" [(ngModel)]="year" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date From</label>
+        <input class="form-control" type="date" [(ngModel)]="dateFrom" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date To</label>
+        <input class="form-control" type="date" [(ngModel)]="dateTo" />
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary w-100" type="button" (click)="load()" [disabled]="loading">Apply</button>
+      </div>
+    </div>
+    <div class="mt-3">
+      <app-location-cascade [value]="location" (valueChange)="location = $event" [showVillage]="false"></app-location-cascade>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary"></div>
+    <div class="mt-2">Loading dashboard...</div>
+  </div>
+
+  <ng-container *ngIf="!loading && summary as s">
+    <div class="kpi-grid">
+      <div class="kpi"><span>Total GPs</span><strong>{{ s.kpis.totalGps || 0 }}</strong></div>
+      <div class="kpi ok"><span>Qualified</span><strong>{{ s.kpis.qualifiedGps || 0 }}</strong></div>
+      <div class="kpi bad"><span>Not Qualified</span><strong>{{ s.kpis.notQualifiedGps || 0 }}</strong></div>
+      <div class="kpi bronze"><span>Bronze</span><strong>{{ s.kpis.bronzeGps || 0 }}</strong></div>
+      <div class="kpi silver"><span>Silver</span><strong>{{ s.kpis.silverGps || 0 }}</strong></div>
+      <div class="kpi gold"><span>Gold</span><strong>{{ s.kpis.goldGps || 0 }}</strong></div>
+      <div class="kpi"><span>Testing Target</span><strong>{{ s.kpis.testingTarget || 0 }}</strong></div>
+      <div class="kpi"><span>Testing Done</span><strong>{{ s.kpis.testingCompleted || 0 }}</strong></div>
+      <div class="kpi"><span>Testing Pending</span><strong>{{ s.kpis.testingPending || 0 }}</strong></div>
+      <div class="kpi"><span>Poshan Pending</span><strong>{{ s.kpis.poshanPending || 0 }}</strong></div>
+    </div>
+
+    <div class="row g-3 mt-1">
+      <div class="col-lg-7">
+        <div class="card panel">
+          <h2>Monthly Performance</h2>
+          <canvas #monthlyChart height="140"></canvas>
+          <div class="mt-3 ytd" *ngIf="s.cumulativeYtd as y">
+            <strong>Jan–Current cumulative:</strong>
+            Tested {{ y.tested }} · Target {{ y.target }} · Pending {{ y.pending }} · Qualified GPs {{ y.qualifiedGps }}
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card panel">
+          <h2>Top 10 (Least Pending)</h2>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead><tr><th>GP</th><th>Pending</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let r of rankings?.top10LeastPending || []"><td>{{ r.gpName }}</td><td>{{ r.testingPending }}</td></tr>
+                <tr *ngIf="!(rankings?.top10LeastPending || []).length"><td colspan="2" class="text-muted">No data</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h2 class="mt-3">Bottom 10 (Most Pending)</h2>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead><tr><th>GP</th><th>Pending</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let r of rankings?.bottom10MostPending || []"><td>{{ r.gpName }}</td><td>{{ r.testingPending }}</td></tr>
+                <tr *ngIf="!(rankings?.bottom10MostPending || []).length"><td colspan="2" class="text-muted">No data</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card panel mt-3">
+      <h2>Qualified GP Line List</h2>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>District</th><th>Block</th><th>GP</th><th>Status</th><th>Medal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of rankings?.qualifiedGpList || []">
+              <td>{{ r.districtName }}</td>
+              <td>{{ r.blockName }}</td>
+              <td>{{ r.gpName }}</td>
+              <td><span class="badge-status qualified">Qualified</span></td>
+              <td><span class="medal" [ngClass]="medalClass(r.medal)">{{ r.medal || 'NONE' }}</span></td>
+            </tr>
+            <tr *ngIf="!(rankings?.qualifiedGpList || []).length">
+              <td colspan="5" class="text-muted text-center py-4">No qualified GPs for selected filters</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1" *ngIf="level !== 'block'">
+      <div class="col-md-6">
+        <div class="card panel">
+          <h2>District Ranking</h2>
+          <table class="table table-sm">
+            <thead><tr><th>District</th><th>Qualified</th><th>Pending</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let r of rankings?.districtRanking || []">
+                <td>{{ r.districtName }}</td><td>{{ r.qualifiedGps }}/{{ r.totalGps }}</td><td>{{ r.testingPending }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card panel">
+          <h2>Block Ranking</h2>
+          <table class="table table-sm">
+            <thead><tr><th>Block</th><th>Qualified</th><th>Pending</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let r of rankings?.blockRanking || []">
+                <td>{{ r.blockName }}</td><td>{{ r.qualifiedGps }}/{{ r.totalGps }}</td><td>{{ r.testingPending }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

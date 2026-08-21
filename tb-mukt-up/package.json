@@ -1,0 +1,10 @@
+{
+  "name": "tb-mukt-up",
+  "private": true,
+  "scripts": {
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend start",
+    "init-db": "npm --prefix backend run init-db",
+    "inspect-schema": "npm --prefix backend run inspect-schema"
+  }
+}

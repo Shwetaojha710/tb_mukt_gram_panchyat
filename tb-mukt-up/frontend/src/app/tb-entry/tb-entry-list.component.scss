@@ -1,0 +1,19 @@
+.page-head h1 { margin: 0; color: #0b4f8a; }
+.page-head p { color: #5b6b7c; margin: 0.2rem 0 0; }
+.panel {
+  border: 1px solid #d9e6f2;
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  background: #fff;
+}
+.badge-status {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.badge-status.submitted { background: #e3f2fd; color: #0b4f8a; }
+.badge-status.draft { background: #fff8e1; color: #8d6e00; }
+.badge-status.qualified { background: #e8f5e9; color: #1b5e20; }
+.badge-status.not-qualified { background: #ffebee; color: #b71c1c; }

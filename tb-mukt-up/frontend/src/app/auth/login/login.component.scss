@@ -1,0 +1,214 @@
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  background: var(--tb-bg);
+}
+
+.login-hero {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  padding: clamp(2rem, 5vw, 3.5rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background:
+    linear-gradient(145deg, rgba(7, 54, 82, 0.92) 0%, rgba(10, 79, 122, 0.88) 48%, rgba(13, 107, 99, 0.9) 100%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  animation: fade-up 0.7s ease both;
+}
+
+.hero-glow {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  right: -120px;
+  bottom: -80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(224, 122, 26, 0.45), transparent 68%);
+  animation: soft-pulse 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+}
+
+.hero-logo {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 50%;
+  padding: 6px;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+}
+
+.brand-title {
+  margin: 0;
+  font-size: clamp(2.1rem, 4vw, 3.1rem);
+  line-height: 1.05;
+  font-weight: 700;
+}
+
+.hero-hi {
+  margin: 0.65rem 0 0;
+  color: #ffd8a8;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.hero-lead {
+  margin: 1rem 0 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 1.05rem;
+  line-height: 1.5;
+  max-width: 34ch;
+}
+
+.hero-points {
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.hero-points li {
+  position: relative;
+  padding-left: 1.15rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 500;
+}
+
+.hero-points li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--tb-saffron);
+}
+
+.hero-foot {
+  position: relative;
+  z-index: 1;
+  margin: 2rem 0 0;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.login-panel {
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at 85% 15%, rgba(224, 122, 26, 0.12), transparent 35%),
+    linear-gradient(180deg, #f7fafc 0%, #e8f1f6 100%);
+  animation: fade-up 0.75s ease 0.08s both;
+}
+
+.login-card {
+  width: min(420px, 100%);
+  background: var(--tb-surface);
+  border: 1px solid var(--tb-line);
+  border-radius: 20px;
+  padding: 1.75rem 1.6rem 1.85rem;
+  box-shadow: var(--tb-shadow);
+}
+
+.login-head .eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--tb-saffron);
+}
+
+.login-head h2 {
+  margin: 0.35rem 0 0;
+  font-size: 1.7rem;
+  color: var(--tb-ink);
+}
+
+.login-head .muted {
+  margin: 0.35rem 0 0;
+  color: var(--tb-muted);
+  font-size: 0.95rem;
+}
+
+.field {
+  margin-top: 1.1rem;
+}
+
+.password-row {
+  position: relative;
+}
+
+.password-row .form-control {
+  padding-right: 4.25rem;
+}
+
+.toggle-pw {
+  position: absolute;
+  right: 0.45rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--tb-blue);
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 0.35rem 0.55rem;
+}
+
+.links {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.95rem;
+}
+
+.links a {
+  color: var(--tb-blue);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.links a:hover {
+  color: var(--tb-saffron);
+}
+
+.login-btn {
+  width: 100%;
+  margin-top: 1.35rem;
+  min-height: 48px;
+  border-radius: 12px;
+  font-size: 1rem;
+}
+
+@media (max-width: 920px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-hero {
+    min-height: 42vh;
+  }
+
+  .brand-title {
+    font-size: 2rem;
+  }
+
+  .hero-points {
+    display: none;
+  }
+}
