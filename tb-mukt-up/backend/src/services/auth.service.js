@@ -56,6 +56,84 @@ function publicUser(user) {
     villageId: user.village_id,
     userTypeId: user.user_type_id || null,
     userTypeName: user.user_type_name || null,
+    // Optional names (filled by enrichUserWithNames)
+    stateName: user.state_name || user.stateName || null,
+    divisionName: user.division_name || user.divisionName || null,
+    districtName: user.district_name || user.districtName || null,
+    districtCode: user.district_code || user.districtCode || null,
+    tehsilName: user.tehsil_name || user.tehsilName || null,
+    tehsilCode: user.tehsil_code || user.tehsilCode || null,
+    blockName: user.block_name || user.blockName || null,
+    blockCode: user.block_code || user.blockCode || null,
+    gpName: user.gp_name || user.gpName || null,
+    gpCode: user.gp_code || user.gpCode || null,
+    villageName: user.village_name || user.villageName || null,
+    villageCode: user.village_code || user.villageCode || null,
+  };
+}
+
+/**
+ * Resolve location IDs → names/codes for login + /me responses.
+ * Accepts either JWT-style camelCase or internal snake_case user objects.
+ */
+async function enrichUserWithNames(userLike = {}) {
+  const locationService = require('./location.service');
+
+  const stateId = nz(userLike.stateId ?? userLike.state_id);
+  const divisionId = nz(userLike.divisionId ?? userLike.division_id);
+  let districtId = nz(userLike.districtId ?? userLike.district_id);
+  const blockId = nz(userLike.blockId ?? userLike.block_id ?? userLike.tehsilId ?? userLike.tehsil_id);
+  const gpId = nz(userLike.gpId ?? userLike.gp_id);
+  const villageId = nz(userLike.villageId ?? userLike.village_id);
+
+  // If district missing but block known, resolve parent district
+  if (!districtId && blockId) {
+    try {
+      const resolved = await locationService.resolveFromBlock(blockId);
+      districtId = nz(resolved.districtId);
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  const [state, division, district, block, gp, village] = await Promise.all([
+    stateId ? locationService.getById('state', stateId) : null,
+    divisionId ? locationService.getById('division', divisionId) : null,
+    districtId ? locationService.getById('district', districtId) : null,
+    blockId ? locationService.getById('block', blockId) : null,
+    gpId ? locationService.getById('gp', gpId) : null,
+    villageId ? locationService.getById('village', villageId) : null,
+  ]);
+
+  return {
+    ...userLike,
+    // Keep both shapes so publicUser + JWT consumers work
+    state_id: stateId,
+    division_id: divisionId,
+    district_id: districtId,
+    tehsil_id: blockId,
+    block_id: blockId,
+    gp_id: gpId,
+    village_id: villageId,
+    stateId,
+    divisionId,
+    districtId,
+    tehsilId: blockId,
+    blockId,
+    gpId,
+    villageId,
+    stateName: state?.name || null,
+    divisionName: division?.name || null,
+    districtName: district?.name || null,
+    districtCode: district?.code || null,
+    tehsilName: block?.name || null,
+    tehsilCode: block?.code || null,
+    blockName: block?.name || null,
+    blockCode: block?.code || null,
+    gpName: gp?.name || null,
+    gpCode: gp?.code || null,
+    villageName: village?.name || null,
+    villageCode: village?.code || null,
   };
 }
 
@@ -196,17 +274,50 @@ async function login(body) {
   if (user.block_id && !user.tehsil_id) user.tehsil_id = user.block_id;
   if (user.tehsil_id && !user.block_id) user.block_id = user.tehsil_id;
 
-  // TB Mukt portal: only Block User accounts may sign in
-  const typeName = String(user.user_type_name || '').toLowerCase();
-  const isBlockUser =
-    typeName.includes('block user') ||
-    (typeName.includes('block') && !typeName.includes('unblock')) ||
-    Number(user.user_type_id) === 7;
-  if (!isBlockUser) {
-    throw new AppError('Access denied. Only Block users can login to this application.', 403);
+  // Portal access policy: State / District / Block teams can login.
+  // Tehsil is treated as Block scope because Block master is used for hierarchy.
+  const normalizedRole = String(user.role || '').toUpperCase();
+  const allowedRoles = new Set(['STATE', 'DISTRICT', 'BLOCK', 'TEHSIL']);
+  if (!allowedRoles.has(normalizedRole)) {
+    throw new AppError('Access denied. Only State, District, and Block users can login to this application.', 403);
   }
 
-  return { user: publicUser(user), token: signToken(user) };
+  const enriched = await enrichUserWithNames(user);
+  return { user: publicUser(enriched), token: signToken(enriched) };
+}
+
+async function getMe(jwtUser) {
+  const enriched = await enrichUserWithNames(jwtUser || {});
+  return publicUser({
+    id: enriched.userId || enriched.id,
+    full_name: enriched.fullName || enriched.full_name,
+    mobile: enriched.mobile || null,
+    email: enriched.email || null,
+    username: enriched.username,
+    designation: enriched.designation || enriched.userTypeName || null,
+    role: enriched.role,
+    state_id: enriched.stateId,
+    division_id: enriched.divisionId,
+    district_id: enriched.districtId,
+    tehsil_id: enriched.tehsilId,
+    block_id: enriched.blockId,
+    gp_id: enriched.gpId,
+    village_id: enriched.villageId,
+    user_type_id: enriched.userTypeId || null,
+    user_type_name: enriched.userTypeName || null,
+    stateName: enriched.stateName,
+    divisionName: enriched.divisionName,
+    districtName: enriched.districtName,
+    districtCode: enriched.districtCode,
+    tehsilName: enriched.tehsilName,
+    tehsilCode: enriched.tehsilCode,
+    blockName: enriched.blockName,
+    blockCode: enriched.blockCode,
+    gpName: enriched.gpName,
+    gpCode: enriched.gpCode,
+    villageName: enriched.villageName,
+    villageCode: enriched.villageCode,
+  });
 }
 
 async function forgotPassword({ mobile, email }) {
@@ -267,6 +378,8 @@ async function resetPassword({ token, newPassword }) {
 module.exports = {
   register,
   login,
+  getMe,
+  enrichUserWithNames,
   forgotPassword,
   resetPassword,
   publicUser,

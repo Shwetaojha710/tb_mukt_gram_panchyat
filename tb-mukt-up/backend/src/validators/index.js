@@ -47,24 +47,32 @@ const loginSchema = Joi.object({
 }).or('username', 'mobile');
 
 const tbEntrySchema = Joi.object({
+  entryId: Joi.number().integer().allow(null),
   stateId: Joi.number().integer().allow(null),
   divisionId: Joi.number().integer().allow(null),
   districtId: Joi.number().integer().required(),
   tehsilId: Joi.number().integer().allow(null),
   blockId: Joi.number().integer().allow(null),
   gpId: Joi.number().integer().required(),
-  villageId: Joi.number().integer().allow(null),
+  villageId: Joi.number().integer().required(),
   gpPopulation: Joi.number().integer().min(0),
   reportingMonth: Joi.number().integer().min(1).max(12).required(),
   reportingYear: Joi.number().integer().min(2020).max(2100).required(),
+  // Digit limits are soft UI warnings only — do not reject save
   testedNaat: Joi.number().integer().min(0).required(),
   tbDiagnosed: Joi.number().integer().min(0).required(),
-  prevYearSuccessTreatment: Joi.number().min(0).required(),
+  prevYearSuccessTreatment: Joi.number().min(0).max(100).required(),
   previousYearCases: Joi.number().min(0).allow(null),
   treatmentSuccessPct: Joi.number().min(0).max(100).allow(null),
   poshanEligible: Joi.number().integer().min(0).required(),
   poshanReceived: Joi.number().integer().min(0).required(),
 }).or('blockId', 'tehsilId');
+
+const tbEntrySettingsSchema = Joi.object({
+  reportingMonthsBack: Joi.number().integer().min(1).max(24).required(),
+  submitDeadlineDay: Joi.number().integer().min(1).max(28).required(),
+  editDeadlineDay: Joi.number().integer().min(1).max(28).required(),
+});
 
 function validate(schema) {
   return (req, _res, next) => {
@@ -83,6 +91,7 @@ module.exports = {
   registerSchema,
   loginSchema,
   tbEntrySchema,
+  tbEntrySettingsSchema,
   validate,
   strongPassword,
 };

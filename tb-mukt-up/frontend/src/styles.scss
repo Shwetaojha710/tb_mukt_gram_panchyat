@@ -1,4 +1,4 @@
-/* TB Mukt UP — design tokens */
+/* TB Mukt UP — design tokens (aligned with District Dashboard scale) */
 :root {
   --tb-ink: #0c2438;
   --tb-blue: #0a4f7a;
@@ -12,9 +12,21 @@
   --tb-muted: #5a6f82;
   --tb-line: #d3e2ee;
   --tb-shadow: 0 16px 40px rgba(7, 54, 82, 0.1);
-  --tb-radius: 16px;
+  --tb-radius: 14px;
   --font-display: "Fraunces", "Noto Serif Devanagari", Georgia, serif;
   --font-body: "Figtree", "Noto Sans Devanagari", system-ui, sans-serif;
+
+  /* Global type scale */
+  --fs-xs: 0.8rem;
+  --fs-sm: 0.8rem;
+  --fs-label: 0.8rem;
+  --fs-body: 0.8rem;
+  --fs-body-lg: 0.8rem;
+  --fs-btn: 0.8rem;
+  --fs-title: 0.8rem;
+  --fs-h2: 0.8rem;
+  --fs-stat: 0.8rem;
+  --control-h: 38px;
 }
 
 html,
@@ -25,6 +37,8 @@ body {
 body {
   margin: 0;
   font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.45;
   background: var(--tb-bg);
   color: var(--tb-ink);
   -webkit-font-smoothing: antialiased;
@@ -37,12 +51,62 @@ h2,
   letter-spacing: -0.02em;
 }
 
+h1 {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--fs-body-lg);
+  font-weight: 650;
+}
+
+p,
+li,
+td,
+th,
+span,
+label,
+a {
+  font-size: inherit;
+}
+
+.btn {
+  font-size: var(--fs-btn);
+  min-height: var(--control-h);
+  padding: 0.4rem 0.85rem;
+  border-radius: 9px;
+  font-weight: 650;
+}
+
+.btn-sm {
+  font-size: var(--fs-sm);
+  min-height: 32px;
+  padding: 0.25rem 0.65rem;
+}
+
+.btn-lg {
+  font-size: var(--fs-body-lg);
+  min-height: 42px;
+}
+
 .btn-primary {
   --bs-btn-bg: var(--tb-blue);
   --bs-btn-border-color: var(--tb-blue);
   --bs-btn-hover-bg: var(--tb-blue-deep);
   --bs-btn-hover-border-color: var(--tb-blue-deep);
-  --bs-btn-font-weight: 600;
+  --bs-btn-font-weight: 650;
+  --bs-btn-font-size: var(--fs-btn);
 }
 
 .btn-success {
@@ -60,9 +124,17 @@ h2,
 .form-control,
 .form-select {
   border-color: var(--tb-line);
-  border-radius: 10px;
-  padding: 0.65rem 0.85rem;
-  min-height: 44px;
+  border-radius: 9px;
+  padding: 0.4rem 0.65rem;
+  min-height: var(--control-h);
+  font-size: var(--fs-body);
+}
+
+.form-control-sm,
+.form-select-sm {
+  min-height: 34px;
+  font-size: var(--fs-sm);
+  padding: 0.3rem 0.5rem;
 }
 
 .form-control:focus,
@@ -74,7 +146,26 @@ h2,
 .form-label {
   font-weight: 600;
   color: var(--tb-blue-deep);
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.2rem;
+  font-size: var(--fs-label);
+}
+
+.table {
+  font-size: var(--fs-body);
+}
+
+.table > :not(caption) > * > * {
+  padding: 0.5rem 0.6rem;
+}
+
+.table th {
+  font-size: var(--fs-label);
+  font-weight: 700;
+}
+
+.small,
+small {
+  font-size: var(--fs-sm);
 }
 
 @keyframes fade-up {

@@ -1,60 +1,69 @@
-<div class="row g-3 location-cascade">
-  <div class="col-md-6">
-    <label class="form-label">District / जनपद <span class="text-danger">*</span></label>
+<div
+  class="row location-cascade"
+  [class.g-2]="!compact"
+  [class.compact]="compact"
+>
+  <div [class]="compact ? 'col' : 'col-md-6'" *ngIf="!hideDistrict">
+    <label class="form-label">District <span class="text-danger">*</span></label>
     <select
       class="form-select"
-      [(ngModel)]="value.districtId"
-      (ngModelChange)="onDistrictChange()"
+      [class.form-select-sm]="compact"
+      [ngModel]="idStr(value.districtId)"
+      (ngModelChange)="onDistrictIdChange($event)"
       [disabled]="disabled || lockDistrict || loading"
       name="districtId"
       required
     >
-      <option [ngValue]="null">{{ loading ? 'Loading...' : 'Select District' }}</option>
-      <option *ngFor="let s of districts" [ngValue]="s.id">{{ s.name }}</option>
+      <option value="">{{ loading ? 'Loading...' : 'Select District' }}</option>
+      <option *ngFor="let s of districts" [value]="s.id">{{ s.name }}</option>
     </select>
   </div>
 
-  <div class="col-md-6">
-    <label class="form-label">Block / ब्लॉक <span class="text-danger">*</span></label>
+  <div [class]="compact ? 'col' : 'col-md-6'" *ngIf="!hideBlock">
+    <label class="form-label">Block <span class="text-danger">*</span></label>
     <select
       class="form-select"
-      [(ngModel)]="value.blockId"
-      (ngModelChange)="onBlockChange()"
-      [disabled]="disabled || lockBlock || !value.districtId"
+      [class.form-select-sm]="compact"
+      [ngModel]="idStr(value.blockId)"
+      (ngModelChange)="onBlockIdChange($event)"
+      [disabled]="disabled || lockBlock || (!hideDistrict && !value.districtId)"
       name="blockId"
       required
     >
-      <option [ngValue]="null">Select Block</option>
-      <option *ngFor="let s of blocks" [ngValue]="s.id">{{ s.name }}</option>
+      <option value="">Select Block</option>
+      <option *ngFor="let s of blocks" [value]="s.id">{{ s.name }}</option>
     </select>
   </div>
 
-  <div class="col-md-6">
-    <label class="form-label">Gram Panchayat / ग्राम पंचायत <span class="text-danger">*</span></label>
+  <div [class]="compact ? 'col' : (hideDistrict && hideBlock ? 'col-md-12' : 'col-md-6')">
+    <label class="form-label">GP <span class="text-danger">*</span></label>
     <select
       class="form-select"
-      [(ngModel)]="value.gpId"
-      (ngModelChange)="onGpChange()"
-      [disabled]="disabled || lockGp || !value.blockId"
+      [class.form-select-sm]="compact"
+      [ngModel]="idStr(value.gpId)"
+      (ngModelChange)="onGpIdChange($event)"
+      [disabled]="disabled || lockGp || (!value.blockId && !hideBlock)"
       name="gpId"
       required
     >
-      <option [ngValue]="null">Select Gram Panchayat</option>
-      <option *ngFor="let s of gps" [ngValue]="s.id">{{ s.name }}</option>
+      <option value="">Select GP</option>
+      <option *ngFor="let s of gps" [value]="s.id">{{ s.name }}</option>
     </select>
   </div>
 
-  <div class="col-md-6" *ngIf="showVillage">
-    <label class="form-label">Village / ग्राम</label>
+  <div [class]="compact ? 'col' : 'col-md-6'" *ngIf="showVillage">
+    <label class="form-label">Village <span class="text-danger">*</span></label>
     <select
       class="form-select"
-      [(ngModel)]="value.villageId"
-      (ngModelChange)="onVillageChange()"
+      [class.form-select-sm]="compact"
+      [ngModel]="idStr(value.villageId)"
+      (ngModelChange)="onVillageIdChange($event)"
       [disabled]="disabled || lockVillage || !value.gpId"
       name="villageId"
+      required
     >
-      <option [ngValue]="null">Select Village</option>
-      <option *ngFor="let s of villages" [ngValue]="s.id">{{ s.name }}</option>
+      <option value="">Select Village</option>
+      <option *ngFor="let s of villages" [value]="s.id">{{ s.name }}</option>
     </select>
   </div>
 </div>

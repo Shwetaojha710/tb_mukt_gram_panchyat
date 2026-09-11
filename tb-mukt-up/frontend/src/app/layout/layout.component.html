@@ -1,10 +1,10 @@
 <div class="app-layout">
   <aside class="sidebar">
     <div class="side-brand">
-      <img src="assets/logo.png" alt="TB Mukt" />
+      <app-brand-logo size="sm" />
       <div>
-        <strong>TB Mukt UP</strong>
-        <span>टीबी मुक्त उत्तर प्रदेश</span>
+        <strong>TB Mukt Gram Panchayat, Uttar Pradesh</strong>
+        <span>टीबी मुक्त ग्राम पंचायत, उत्तर प्रदेश</span>
       </div>
     </div>
 
@@ -14,45 +14,88 @@
         <span class="nav-ico" aria-hidden="true">▣</span>
         State Dashboard
       </a>
+      <p class="nav-label" *ngIf="user?.role === 'STATE'">Admin</p>
+      <a
+        routerLink="/settings/tb-entry"
+        routerLinkActive="active"
+        *ngIf="user?.role === 'STATE'"
+      >
+        <span class="nav-ico" aria-hidden="true">⚙</span>
+        TB Entry Settings
+      </a>
       <a
         routerLink="/dashboard/district"
         routerLinkActive="active"
-        *ngIf="user?.role === 'STATE' || user?.role === 'DIVISION' || user?.role === 'DISTRICT' || user?.role === 'TEHSIL'"
+        *ngIf="user?.role === 'DISTRICT'"
       >
         <span class="nav-ico" aria-hidden="true">▦</span>
         District Dashboard
       </a>
-      <a routerLink="/dashboard/block" routerLinkActive="active">
+      <a
+        routerLink="/dashboard/block"
+        routerLinkActive="active"
+        *ngIf="user?.role === 'BLOCK' || user?.role === 'TEHSIL'"
+      >
         <span class="nav-ico" aria-hidden="true">▤</span>
         Block Dashboard
       </a>
 
-      <p class="nav-label">Data entry</p>
-      <a routerLink="/tb-entry" routerLinkActive="active">
+      <p class="nav-label" *ngIf="user?.role === 'BLOCK' || user?.role === 'TEHSIL'">Data entry</p>
+      <a
+        routerLink="/tb-entry"
+        routerLinkActive="active"
+        *ngIf="user?.role === 'BLOCK' || user?.role === 'TEHSIL'"
+      >
         <span class="nav-ico" aria-hidden="true">✎</span>
-        TB Data Entry
+        TB Entry
       </a>
-      <a routerLink="/tb-entries" routerLinkActive="active">
+      <a
+        routerLink="/tb-entries"
+        routerLinkActive="active"
+        *ngIf="user?.role === 'BLOCK' || user?.role === 'TEHSIL'"
+      >
         <span class="nav-ico" aria-hidden="true">☰</span>
         TB Entry List
       </a>
+      <!-- <a
+        routerLink="/tb-upload"
+        routerLinkActive="active"
+        *ngIf="user?.role === 'BLOCK' || user?.role === 'TEHSIL'"
+      >
+        <span class="nav-ico" aria-hidden="true">⇪</span>
+        TB Upload Format
+      </a> -->
+
     </nav>
 
     <div class="side-user" *ngIf="user as u">
-      <div class="avatar">{{ (u.fullName || u.username || 'U').charAt(0) }}</div>
-      <div class="meta">
-        <strong>{{ u.fullName || u.username }}</strong>
-        <span>{{ u.role }}</span>
+      <div class="user-row">
+        <div class="avatar">{{ (u.fullName || u.username || 'U').charAt(0) }}</div>
+        <div class="meta">
+          <strong>{{ u.fullName || u.username }}</strong>
+          <span>{{ u.role }}</span>
+        </div>
       </div>
-      <button class="logout" type="button" (click)="logout()" title="Logout">⎋</button>
+      <button class="logout" type="button" (click)="logout()">
+        <svg class="logout-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path
+            fill="currentColor"
+            d="M10 17v-3h4v-4h-4V7l-5 5 5 5zm9-14H9c-1.1 0-2 .9-2 2v3h2V5h10v14H9v-3H7v3c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"
+          />
+        </svg>
+        Logout
+      </button>
     </div>
   </aside>
 
   <div class="main-column">
     <header class="topbar">
-      <div>
-        <h1 class="page-title">TB Mukt Uttar Pradesh</h1>
-        <p class="page-sub">Health Department · Government of Uttar Pradesh</p>
+      <div class="topbar-brand">
+        <app-brand-logo size="xs" />
+        <div>
+          <h1 class="page-title">TB Mukt Gram Panchayat</h1>
+          <p class="page-sub">Health Department · Government of Uttar Pradesh</p>
+        </div>
       </div>
     </header>
     <main class="content">

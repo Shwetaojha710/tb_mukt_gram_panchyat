@@ -1,0 +1,34 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Bulk data onboarding</p>
+      <h1>TB Upload Format</h1>
+      <p class="lead">This page only provides upload template and rules. It does not write anything to database.</p>
+    </div>
+    <button class="btn btn-primary" type="button" (click)="downloadTemplateCsv()">Download CSV Template</button>
+  </div>
+
+  <div class="panel">
+    <h2>Required columns</h2>
+    <ul>
+      <li *ngFor="let col of requiredColumns"><code>{{ col }}</code></li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h2>Validation rules</h2>
+    <ul>
+      <li><code>tested_naat</code>: 0 to 999</li>
+      <li><code>tb_diagnosed</code>: 0 to 99 and must be less than or equal to <code>tested_naat</code></li>
+      <li><code>prev_year_success_treatment</code>: 0 to 100</li>
+      <li><code>poshan_eligible</code>: 0 to 99</li>
+      <li><code>poshan_received</code>: 0 to 99 and must be less than or equal to <code>poshan_eligible</code></li>
+      <li>Duplicate not allowed for same <code>gp_id + reporting_month + reporting_year</code></li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h2>Sample CSV rows</h2>
+    <pre>{{ sampleRows.join('\n') }}</pre>
+  </div>
+</div>

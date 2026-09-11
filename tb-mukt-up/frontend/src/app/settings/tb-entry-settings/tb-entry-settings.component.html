@@ -1,0 +1,37 @@
+<p>tb-entry-settings works!</p>
+<div class="page">
+  <div class="page-head">
+    <h1>TB Entry Settings</h1>
+    <p>State admin · control reporting window, submit &amp; edit deadlines</p>
+  </div>
+
+  <div class="card panel" *ngIf="!loading">
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="mb-3">
+        <label class="form-label">How many Reporting Months back can users enter? *</label>
+        <input type="number" class="form-control" formControlName="reportingMonthsBack" min="1" max="24" />
+        <div class="form-text">Example: 6 = last 6 completed months (current month excluded)</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Submit deadline (day of current month) *</label>
+        <input type="number" class="form-control" formControlName="submitDeadlineDay" min="1" max="28" />
+        <div class="form-text">Example: 10 = August data can be submitted till 10 September</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Edit deadline (day of current month) *</label>
+        <input type="number" class="form-control" formControlName="editDeadlineDay" min="1" max="28" />
+        <div class="form-text">Example: 15 = submitted August data editable till 15 September</div>
+      </div>
+
+      <button class="btn btn-primary" type="submit" [disabled]="saving">
+        {{ saving ? 'Saving…' : 'Save settings' }}
+      </button>
+    </form>
+  </div>
+
+  <div class="text-center py-4" *ngIf="loading">
+    <div class="spinner-border text-primary"></div>
+  </div>
+</div>

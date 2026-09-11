@@ -1,143 +1,622 @@
 <div class="page">
-  <div class="page-head d-flex justify-content-between align-items-start flex-wrap gap-2">
+  <div class="page-head">
     <div>
+      <!-- <p class="eyebrow">{{ level | uppercase }} overview</p> -->
       <h1>{{ title }}</h1>
-      <p>Filters, KPIs, rankings and exports</p>
+      <!-- <p class="lead" *ngIf="isState">State overview · filters + line list</p>
+      <p class="lead" *ngIf="isDistrict">District overview · Block / GP filters + line list</p>
+      <p class="lead" *ngIf="isBlock">Block overview · GP filter + line list</p> -->
     </div>
-    <button class="btn btn-success" type="button" (click)="exportExcel()">Download Excel</button>
+    <button class="btn btn-export" type="button" (click)="exportExcel()" [disabled]="loading">
+      Export Table (Excel)
+    </button>
   </div>
 
-  <div class="card panel mb-3">
-    <div class="row g-3 align-items-end">
-      <div class="col-md-2">
+  <!-- Compact filter bar — State / District / Block -->
+  <div class="panel filters-panel">
+    <div class="filter-bar">
+      <div class="f-item f-year">
         <label class="form-label">Year</label>
-        <input class="form-control" type="number" [(ngModel)]="year" />
+        <input class="form-control form-control-sm" type="number" [(ngModel)]="year" />
       </div>
-      <div class="col-md-3">
-        <label class="form-label">Date From</label>
-        <input class="form-control" type="date" [(ngModel)]="dateFrom" />
+      <div class="f-item f-month">
+        <label class="form-label">Month</label>
+        <select class="form-select form-select-sm" [(ngModel)]="reportingMonth">
+          <option *ngFor="let m of months" [ngValue]="m.id">{{ m.name }}</option>
+        </select>
       </div>
-      <div class="col-md-3">
-        <label class="form-label">Date To</label>
-        <input class="form-control" type="date" [(ngModel)]="dateTo" />
+      <div class="f-item f-from">
+        <label class="form-label">From</label>
+        <input class="form-control form-control-sm" type="date" [(ngModel)]="dateFrom" />
       </div>
-      <div class="col-md-2">
-        <button class="btn btn-primary w-100" type="button" (click)="load()" [disabled]="loading">Apply</button>
+      <div class="f-item f-to">
+        <label class="form-label">To</label>
+        <input class="form-control form-control-sm" type="date" [(ngModel)]="dateTo" />
       </div>
-    </div>
-    <div class="mt-3">
-      <app-location-cascade [value]="location" (valueChange)="location = $event" [showVillage]="false"></app-location-cascade>
+      <div
+        class="f-item f-location"
+        [class.loc-block]="isBlock"
+        [class.loc-district]="isDistrict"
+        [class.loc-state]="isState"
+      >
+        <app-location-cascade
+          [value]="location"
+          (valueChange)="location = $event"
+          [showVillage]="false"
+          [compact]="true"
+          [hideDistrict]="isDistrict || isBlock || lockDistrict"
+          [hideBlock]="isBlock || lockBlock"
+          [lockDistrict]="lockDistrict"
+          [lockBlock]="lockBlock"
+        ></app-location-cascade>
+      </div>
+      <div class="f-item f-apply">
+        <label class="form-label d-none d-md-block">&nbsp;</label>
+        <button class="btn btn-primary btn-sm apply-btn" type="button" (click)="load()" [disabled]="loading">
+          {{ loading ? 'Loading…' : 'Apply' }}
+        </button>
+      </div>
     </div>
   </div>
 
-  <div *ngIf="loading" class="text-center py-5">
+  <div *ngIf="loading" class="loading-box">
     <div class="spinner-border text-primary"></div>
-    <div class="mt-2">Loading dashboard...</div>
+    <div class="mt-2">Loading dashboard…</div>
   </div>
 
-  <ng-container *ngIf="!loading && summary as s">
-    <div class="kpi-grid">
-      <div class="kpi"><span>Total GPs</span><strong>{{ s.kpis.totalGps || 0 }}</strong></div>
-      <div class="kpi ok"><span>Qualified</span><strong>{{ s.kpis.qualifiedGps || 0 }}</strong></div>
-      <div class="kpi bad"><span>Not Qualified</span><strong>{{ s.kpis.notQualifiedGps || 0 }}</strong></div>
-      <div class="kpi bronze"><span>Bronze</span><strong>{{ s.kpis.bronzeGps || 0 }}</strong></div>
-      <div class="kpi silver"><span>Silver</span><strong>{{ s.kpis.silverGps || 0 }}</strong></div>
-      <div class="kpi gold"><span>Gold</span><strong>{{ s.kpis.goldGps || 0 }}</strong></div>
-      <div class="kpi"><span>Testing Target</span><strong>{{ s.kpis.testingTarget || 0 }}</strong></div>
-      <div class="kpi"><span>Testing Done</span><strong>{{ s.kpis.testingCompleted || 0 }}</strong></div>
-      <div class="kpi"><span>Testing Pending</span><strong>{{ s.kpis.testingPending || 0 }}</strong></div>
-      <div class="kpi"><span>Poshan Pending</span><strong>{{ s.kpis.poshanPending || 0 }}</strong></div>
-    </div>
-
-    <div class="row g-3 mt-1">
-      <div class="col-lg-7">
-        <div class="card panel">
-          <h2>Monthly Performance</h2>
-          <canvas #monthlyChart height="140"></canvas>
-          <div class="mt-3 ytd" *ngIf="s.cumulativeYtd as y">
-            <strong>Jan–Current cumulative:</strong>
-            Tested {{ y.tested }} · Target {{ y.target }} · Pending {{ y.pending }} · Qualified GPs {{ y.qualifiedGps }}
-          </div>
-        </div>
+  <!-- ===================== STATE DASHBOARD — all fields in one table ===================== -->
+  <ng-container *ngIf="!loading && isState && summary as s">
+    <div class="stat-cards">
+      <div class="stat-card ok">
+        <span>GPs qualified (YTD)</span>
+        <strong>{{ fmt(s.kpis.qualifiedGpsYtd) }}</strong>
       </div>
-      <div class="col-lg-5">
-        <div class="card panel">
-          <h2>Top 10 (Least Pending)</h2>
-          <div class="table-responsive">
-            <table class="table table-sm">
-              <thead><tr><th>GP</th><th>Pending</th></tr></thead>
-              <tbody>
-                <tr *ngFor="let r of rankings?.top10LeastPending || []"><td>{{ r.gpName }}</td><td>{{ r.testingPending }}</td></tr>
-                <tr *ngIf="!(rankings?.top10LeastPending || []).length"><td colspan="2" class="text-muted">No data</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <h2 class="mt-3">Bottom 10 (Most Pending)</h2>
-          <div class="table-responsive">
-            <table class="table table-sm">
-              <thead><tr><th>GP</th><th>Pending</th></tr></thead>
-              <tbody>
-                <tr *ngFor="let r of rankings?.bottom10MostPending || []"><td>{{ r.gpName }}</td><td>{{ r.testingPending }}</td></tr>
-                <tr *ngIf="!(rankings?.bottom10MostPending || []).length"><td colspan="2" class="text-muted">No data</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+      <div class="stat-card bronze">
+        <span>Bronze GPs</span>
+        <strong>{{ fmt(s.kpis.bronzeGps) }}</strong>
+      </div>
+      <div class="stat-card silver">
+        <span>Silver GPs</span>
+        <strong>{{ fmt(s.kpis.silverGps) }}</strong>
+      </div>
+      <div class="stat-card gold">
+        <span>Gold GPs</span>
+        <strong>{{ fmt(s.kpis.goldGps) }}</strong>
+      </div>
+      <div class="stat-card warn">
+        <span>Pending above 50</span>
+        <strong>{{ fmt(s.kpis.bucketAbove50) }}</strong>
+      </div>
+      <div class="stat-card">
+        <span>Districts · Gold / Silver / Bronze</span>
+        <strong>{{ fmt(s.kpis.districtsWithGold) }} / {{ fmt(s.kpis.districtsWithSilver) }} / {{ fmt(s.kpis.districtsWithBronze) }}</strong>
       </div>
     </div>
 
-    <div class="card panel mt-3">
-      <h2>Qualified GP Line List</h2>
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
+    <div class="panel">
+      <div class="panel-title-row">
+        <div>
+          <h2>State line list</h2>
+          <p class="subhint">Scroll only inside this table · District / Block / GP stay sticky on the left</p>
+        </div>
+        <span class="period-chip">{{ monthLabel }} {{ year }}</span>
+      </div>
+
+      <div class="legend-row">
+        <span class="yn yes">Yes</span> Qualified
+        <span class="yn no">No</span> Not qualified
+        <span class="medal bronze">Bronze</span>
+        <span class="medal silver">Silver</span>
+        <span class="medal gold">Gold</span>
+      </div>
+
+      <div class="table-responsive wide-table">
+        <table class="table table-hover align-middle data-table sticky-head sticky-cols">
           <thead>
             <tr>
-              <th>District</th><th>Block</th><th>GP</th><th>Status</th><th>Medal</th>
+              <th class="col-freeze">State</th>
+              <th class="col-freeze-2">District</th>
+              <th class="col-freeze-3">Block</th>
+              <th class="col-freeze-4">GP</th>
+              <th>GP Pop.</th>
+              <th>Village</th>
+              <th>Village Pop.</th>
+              <th>TB Unit</th>
+              <th class="group-m">NAAT (mo)</th>
+              <th class="group-m">Diagnosed (mo)</th>
+              <th class="group-m">Tx&gt;90% (mo)</th>
+              <th class="group-m">Poshan (mo)</th>
+              <th class="group-y">NAAT (YTD)</th>
+              <th class="group-y">Diagnosed (YTD)</th>
+              <th class="group-y">Tx&gt;90% (YTD)</th>
+              <th class="group-y">Poshan (YTD)</th>
+              <th class="group-y">Test pending</th>
+              <th class="group-y">Bucket</th>
+              <th class="group-y">Poshan pending</th>
+              <th>Qualified</th>
+              <th>Current</th>
+              <th>Prev. year</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let r of rankings?.qualifiedGpList || []">
-              <td>{{ r.districtName }}</td>
-              <td>{{ r.blockName }}</td>
-              <td>{{ r.gpName }}</td>
-              <td><span class="badge-status qualified">Qualified</span></td>
+            <tr *ngFor="let r of rankings?.tbUnitGpLineList || []">
+              <td class="col-freeze">{{ r.stateName || stateName }}</td>
+              <td class="col-freeze-2">
+                <div class="cell-stack">
+                  <strong>{{ r.districtName || '-' }}</strong>
+                  <small>{{ r.districtCode || '-' }}</small>
+                </div>
+              </td>
+              <td class="col-freeze-3">
+                <div class="cell-stack">
+                  <strong>{{ r.blockName || '-' }}</strong>
+                  <small>{{ r.blockCode || '-' }}</small>
+                </div>
+              </td>
+              <td class="col-freeze-4">
+                <div class="cell-stack">
+                  <strong>{{ r.gpName || '-' }}</strong>
+                  <small>{{ r.gpCode || '-' }}</small>
+                </div>
+              </td>
+              <td class="num">{{ fmt(r.gpPopulation) }}</td>
+              <td>
+                <div class="cell-stack" *ngIf="r.villageName">
+                  <strong>{{ r.villageName }}</strong>
+                  <small>{{ r.villageCode || '-' }}</small>
+                </div>
+                <span *ngIf="!r.villageName">—</span>
+              </td>
+              <td class="num">{{ r.villageName ? fmt(r.villagePopulation) : '—' }}</td>
+              <td>{{ r.tbUnitName || 'N/A' }}</td>
+              <td class="num group-m">{{ fmt(r.testedNaatMonth) }}</td>
+              <td class="num group-m">{{ fmt(r.diagnosedMonth) }}</td>
+              <td class="num group-m">{{ fmt(r.treatmentOver90Month) }}</td>
+              <td class="num group-m">{{ fmt(r.poshanReceivedMonth) }}</td>
+              <td class="num group-y">{{ fmt(r.testedNaatYtd) }}</td>
+              <td class="num group-y">{{ fmt(r.diagnosedYtd) }}</td>
+              <td class="num group-y">{{ fmt(r.treatmentOver90Ytd) }}</td>
+              <td class="num group-y">{{ fmt(r.poshanReceivedYtd) }}</td>
+              <td class="num group-y">{{ fmt(r.testingPendingYtd) }}</td>
+              <td><span class="bucket-pill" [attr.data-b]="r.testingPendingBucket || '0'">{{ r.testingPendingBucket || '0' }}</span></td>
+              <td class="num group-y">{{ fmt(r.poshanPendingYtd) }}</td>
+              <td>
+                <span class="yn" [ngClass]="yesNoClass(r.isQualified)">
+                  {{ isYes(r.isQualified) ? 'Yes' : 'No' }}
+                </span>
+              </td>
               <td><span class="medal" [ngClass]="medalClass(r.medal)">{{ r.medal || 'NONE' }}</span></td>
+              <td><span class="medal" [ngClass]="medalClass(r.previousMedal)">{{ r.previousMedal || 'NONE' }}</span></td>
             </tr>
-            <tr *ngIf="!(rankings?.qualifiedGpList || []).length">
-              <td colspan="5" class="text-muted text-center py-4">No qualified GPs for selected filters</td>
+            <tr *ngIf="!(rankings?.tbUnitGpLineList || []).length">
+              <td colspan="22" class="text-muted text-center py-5">No rows for selected filters. Adjust filters and Apply.</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <div class="row g-3 mt-1" *ngIf="level !== 'block'">
-      <div class="col-md-6">
-        <div class="card panel">
-          <h2>District Ranking</h2>
-          <table class="table table-sm">
-            <thead><tr><th>District</th><th>Qualified</th><th>Pending</th></tr></thead>
+    <!-- <div class="panel">
+      <div class="panel-title-row">
+        <h2>Testing pending buckets (GP count)</h2>
+        <span class="hint">Jan till {{ monthLabel }} {{ year }}</span>
+      </div>
+      <div class="bucket-grid">
+        <div class="bucket"><span>1–10</span><strong>{{ fmt(s.kpis.bucket1to10) }}</strong></div>
+        <div class="bucket"><span>11–20</span><strong>{{ fmt(s.kpis.bucket11to20) }}</strong></div>
+        <div class="bucket"><span>21–30</span><strong>{{ fmt(s.kpis.bucket21to30) }}</strong></div>
+        <div class="bucket"><span>31–50</span><strong>{{ fmt(s.kpis.bucket31to50) }}</strong></div>
+        <div class="bucket hot"><span>Above 50</span><strong>{{ fmt(s.kpis.bucketAbove50) }}</strong></div>
+      </div>
+    </div> -->
+
+    <div class="row g-3">
+      <!-- <div class="col-lg-6">
+        <div class="panel rank-panel top">
+          <h2>District ranking — Top 10</h2>
+          <p class="subhint">Least testing pending</p>
+          <table class="table table-sm data-table rank-table">
+            <thead><tr><th>#</th><th>District</th><th>Qualified</th><th class="text-end">Pending</th></tr></thead>
             <tbody>
-              <tr *ngFor="let r of rankings?.districtRanking || []">
-                <td>{{ r.districtName }}</td><td>{{ r.qualifiedGps }}/{{ r.totalGps }}</td><td>{{ r.testingPending }}</td>
+              <tr *ngFor="let r of rankings?.top10Districts || []; let i = index">
+                <td><span class="rank-no">{{ i + 1 }}</span></td>
+                <td>{{ r.districtName }}</td>
+                <td>{{ r.qualifiedGps }}/{{ r.totalGps }}</td>
+                <td class="text-end">{{ fmt(r.testingPending) }}</td>
               </tr>
+              <tr *ngIf="!(rankings?.top10Districts || []).length"><td colspan="4" class="text-muted">No data</td></tr>
             </tbody>
           </table>
         </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card panel">
-          <h2>Block Ranking</h2>
-          <table class="table table-sm">
-            <thead><tr><th>Block</th><th>Qualified</th><th>Pending</th></tr></thead>
+      </div> -->
+      <!-- <div class="col-lg-6">
+        <div class="panel rank-panel bottom">
+          <h2>District ranking — Bottom 10</h2>
+          <p class="subhint">Most testing pending</p>
+          <table class="table table-sm data-table rank-table">
+            <thead><tr><th>#</th><th>District</th><th>Qualified</th><th class="text-end">Pending</th></tr></thead>
             <tbody>
-              <tr *ngFor="let r of rankings?.blockRanking || []">
-                <td>{{ r.blockName }}</td><td>{{ r.qualifiedGps }}/{{ r.totalGps }}</td><td>{{ r.testingPending }}</td>
+              <tr *ngFor="let r of rankings?.bottom10Districts || []; let i = index">
+                <td><span class="rank-no hot">{{ i + 1 }}</span></td>
+                <td>{{ r.districtName }}</td>
+                <td>{{ r.qualifiedGps }}/{{ r.totalGps }}</td>
+                <td class="text-end">{{ fmt(r.testingPending) }}</td>
               </tr>
+              <tr *ngIf="!(rankings?.bottom10Districts || []).length"><td colspan="4" class="text-muted">No data</td></tr>
             </tbody>
           </table>
         </div>
-      </div>
+      </div> -->
     </div>
   </ng-container>
+
+  <!-- ===================== DISTRICT DASHBOARD (spec table) ===================== -->
+  <ng-container *ngIf="!loading && isDistrict && summary as s">
+    <div class="stat-cards">
+      <div class="stat-card ok">
+        <span>GPs qualified (YTD)</span>
+        <strong>{{ fmt(s.kpis.qualifiedGpsYtd) }}</strong>
+      </div>
+      <div class="stat-card bronze">
+        <span>Bronze GPs</span>
+        <strong>{{ fmt(s.kpis.bronzeGps) }}</strong>
+      </div>
+      <div class="stat-card silver">
+        <span>Silver GPs</span>
+        <strong>{{ fmt(s.kpis.silverGps) }}</strong>
+      </div>
+      <div class="stat-card gold">
+        <span>Gold GPs</span>
+        <strong>{{ fmt(s.kpis.goldGps) }}</strong>
+      </div>
+      <div class="stat-card warn">
+        <span>Pending above 50</span>
+        <strong>{{ fmt(s.kpis.bucketAbove50) }}</strong>
+      </div>
+      <div class="stat-card">
+        <span>Blocks · Gold / Silver / Bronze</span>
+        <strong>{{ fmt(s.kpis.blocksWithGold) }} / {{ fmt(s.kpis.blocksWithSilver) }} / {{ fmt(s.kpis.blocksWithBronze) }}</strong>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title-row">
+        <div>
+          <h2>District line list</h2>
+          <p class="subhint">Scroll only inside this table · Block / GP stay sticky on the left</p>
+        </div>
+        <span class="period-chip">{{ monthLabel }} {{ year }}</span>
+      </div>
+
+      <div class="legend-row">
+        <span class="yn yes">Yes</span> Qualified
+        <span class="yn no">No</span> Not qualified
+        <span class="medal bronze">Bronze</span>
+        <span class="medal silver">Silver</span>
+        <span class="medal gold">Gold</span>
+      </div>
+
+      <div class="table-responsive wide-table">
+        <table class="table table-hover align-middle data-table sticky-head sticky-cols district-cols">
+          <thead>
+            <tr>
+              <th class="col-freeze">District</th>
+              <th class="col-freeze-2">Block</th>
+              <th class="col-freeze-3">GP</th>
+              <th>GP Pop.</th>
+              <th>Village</th>
+              <th>Village Pop.</th>
+              <th>TB Unit</th>
+              <th class="group-m">NAAT (mo)</th>
+              <th class="group-m">Diagnosed (mo)</th>
+              <th class="group-m">Tx&gt;90% (mo)</th>
+              <th class="group-m">Poshan (mo)</th>
+              <th class="group-y">NAAT (YTD)</th>
+              <th class="group-y">Diagnosed (YTD)</th>
+              <th class="group-y">Tx&gt;90% (YTD)</th>
+              <th class="group-y">Poshan (YTD)</th>
+              <th class="group-y">Test pending</th>
+              <th class="group-y">Bucket</th>
+              <th class="group-y">Poshan pending</th>
+              <th>Qualified</th>
+              <th>Current</th>
+              <th>Prev. year</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of rankings?.tbUnitGpLineList || []">
+              <td class="col-freeze">
+                <div class="cell-stack">
+                  <strong>{{ r.districtName || '-' }}</strong>
+                  <small>{{ r.districtCode || '-' }}</small>
+                </div>
+              </td>
+              <td class="col-freeze-2">
+                <div class="cell-stack">
+                  <strong>{{ r.blockName || '-' }}</strong>
+                  <small>{{ r.blockCode || '-' }}</small>
+                </div>
+              </td>
+              <td class="col-freeze-3">
+                <div class="cell-stack">
+                  <strong>{{ r.gpName || '-' }}</strong>
+                  <small>{{ r.gpCode || '-' }}</small>
+                </div>
+              </td>
+              <td class="num">{{ fmt(r.gpPopulation) }}</td>
+              <td>
+                <div class="cell-stack" *ngIf="r.villageName">
+                  <strong>{{ r.villageName }}</strong>
+                  <small>{{ r.villageCode || '-' }}</small>
+                </div>
+                <span *ngIf="!r.villageName">—</span>
+              </td>
+              <td class="num">{{ r.villageName ? fmt(r.villagePopulation) : '—' }}</td>
+              <td>{{ r.tbUnitName || 'N/A' }}</td>
+              <td class="num group-m">{{ fmt(r.testedNaatMonth) }}</td>
+              <td class="num group-m">{{ fmt(r.diagnosedMonth) }}</td>
+              <td class="num group-m">{{ fmt(r.treatmentOver90Month) }}</td>
+              <td class="num group-m">{{ fmt(r.poshanReceivedMonth) }}</td>
+              <td class="num group-y">{{ fmt(r.testedNaatYtd) }}</td>
+              <td class="num group-y">{{ fmt(r.diagnosedYtd) }}</td>
+              <td class="num group-y">{{ fmt(r.treatmentOver90Ytd) }}</td>
+              <td class="num group-y">{{ fmt(r.poshanReceivedYtd) }}</td>
+              <td class="num group-y">{{ fmt(r.testingPendingYtd) }}</td>
+              <td><span class="bucket-pill" [attr.data-b]="r.testingPendingBucket || '0'">{{ r.testingPendingBucket || '0' }}</span></td>
+              <td class="num group-y">{{ fmt(r.poshanPendingYtd) }}</td>
+              <td>
+                <span class="yn" [ngClass]="yesNoClass(r.isQualified)">
+                  {{ isYes(r.isQualified) ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td><span class="medal" [ngClass]="medalClass(r.medal)">{{ r.medal || 'NONE' }}</span></td>
+              <td><span class="medal" [ngClass]="medalClass(r.previousMedal)">{{ r.previousMedal || 'NONE' }}</span></td>
+            </tr>
+            <tr *ngIf="!(rankings?.tbUnitGpLineList || []).length">
+              <td colspan="21" class="text-muted text-center py-5">No rows for selected filters. Adjust Block/GP and Apply.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- <div class="panel">
+      <div class="panel-title-row">
+        <h2>Testing pending buckets (GP count)</h2>
+        <span class="hint">Jan till {{ monthLabel }} {{ year }}</span>
+      </div>
+      <div class="bucket-grid">
+        <div class="bucket"><span>1–10</span><strong>{{ fmt(s.kpis.bucket1to10) }}</strong></div>
+        <div class="bucket"><span>11–20</span><strong>{{ fmt(s.kpis.bucket11to20) }}</strong></div>
+        <div class="bucket"><span>21–30</span><strong>{{ fmt(s.kpis.bucket21to30) }}</strong></div>
+        <div class="bucket"><span>31–50</span><strong>{{ fmt(s.kpis.bucket31to50) }}</strong></div>
+        <div class="bucket hot"><span>Above 50</span><strong>{{ fmt(s.kpis.bucketAbove50) }}</strong></div>
+      </div>
+    </div> -->
+
+    <!-- <div class="row g-3">
+      <div class="col-lg-6">
+        <div class="panel rank-panel top">
+          <h2>Block ranking — Top 10</h2>
+          <p class="subhint">Least testing pending</p>
+          <table class="table table-sm data-table rank-table">
+            <thead><tr><th>#</th><th>Block</th><th>Qualified</th><th class="text-end">Pending</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let r of rankings?.top10Blocks || []; let i = index">
+                <td><span class="rank-no">{{ i + 1 }}</span></td>
+                <td>{{ r.blockName }}</td>
+                <td>{{ r.qualifiedGps }}/{{ r.totalGps }}</td>
+                <td class="text-end">{{ fmt(r.testingPending) }}</td>
+              </tr>
+              <tr *ngIf="!(rankings?.top10Blocks || []).length"><td colspan="4" class="text-muted">No data</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="panel rank-panel bottom">
+          <h2>Block ranking — Bottom 10</h2>
+          <p class="subhint">Most testing pending</p>
+          <table class="table table-sm data-table rank-table">
+            <thead><tr><th>#</th><th>Block</th><th>Qualified</th><th class="text-end">Pending</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let r of rankings?.bottom10Blocks || []; let i = index">
+                <td><span class="rank-no hot">{{ i + 1 }}</span></td>
+                <td>{{ r.blockName }}</td>
+                <td>{{ r.qualifiedGps }}/{{ r.totalGps }}</td>
+                <td class="text-end">{{ fmt(r.testingPending) }}</td>
+              </tr>
+              <tr *ngIf="!(rankings?.bottom10Blocks || []).length"><td colspan="4" class="text-muted">No data</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div> -->
+  </ng-container>
+
+  <!-- ===================== BLOCK DASHBOARD (spec table) ===================== -->
+  <ng-container *ngIf="!loading && isBlock && summary as s">
+    <div class="stat-cards">
+      <div class="stat-card ok">
+        <span>GPs qualified (YTD)</span>
+        <strong>{{ fmt(s.kpis.qualifiedGpsYtd) }}</strong>
+      </div>
+      <div class="stat-card bronze">
+        <span>Bronze GPs</span>
+        <strong>{{ fmt(s.kpis.bronzeGps) }}</strong>
+      </div>
+      <div class="stat-card silver">
+        <span>Silver GPs</span>
+        <strong>{{ fmt(s.kpis.silverGps) }}</strong>
+      </div>
+      <div class="stat-card gold">
+        <span>Gold GPs</span>
+        <strong>{{ fmt(s.kpis.goldGps) }}</strong>
+      </div>
+      <div class="stat-card warn">
+        <span>Pending above 50</span>
+        <strong>{{ fmt(s.kpis.bucketAbove50) }}</strong>
+      </div>
+      <div class="stat-card">
+        <span>GP performance · Bronze / Silver / Gold</span>
+        <strong>{{ fmt(s.kpis.bronzeGps) }} / {{ fmt(s.kpis.silverGps) }} / {{ fmt(s.kpis.goldGps) }}</strong>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title-row">
+        <div>
+          <h2>Block line list</h2>
+          <p class="subhint">Scroll only inside this table · District / Block / GP sticky on the left</p>
+        </div>
+        <span class="period-chip">{{ monthLabel }} {{ year }}</span>
+      </div>
+
+      <div class="legend-row">
+        <span class="yn yes">Yes</span> Qualified
+        <span class="yn no">No</span> Not qualified
+        <span class="medal bronze">Bronze</span>
+        <span class="medal silver">Silver</span>
+        <span class="medal gold">Gold</span>
+      </div>
+
+      <div class="table-responsive wide-table">
+        <table class="table table-hover align-middle data-table sticky-head sticky-cols district-cols">
+          <thead>
+            <tr>
+              <th class="col-freeze">District</th>
+              <th class="col-freeze-2">Block</th>
+              <th class="col-freeze-3">GP</th>
+              <th>GP Pop.</th>
+              <th>Village</th>
+              <th>Village Pop.</th>
+              <th>TB Unit</th>
+              <th class="group-m">NAAT (mo)</th>
+              <th class="group-m">Diagnosed (mo)</th>
+              <th class="group-m">Tx&gt;90% (mo)</th>
+              <th class="group-m">Poshan (mo)</th>
+              <th class="group-y">NAAT (YTD)</th>
+              <th class="group-y">Diagnosed (YTD)</th>
+              <th class="group-y">Tx&gt;90% (YTD)</th>
+              <th class="group-y">Poshan (YTD)</th>
+              <th class="group-y">Test pending</th>
+              <th class="group-y">Bucket</th>
+              <th class="group-y">Poshan pending</th>
+              <th>Qualified</th>
+              <th>Current</th>
+              <th>Prev. year</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of rankings?.tbUnitGpLineList || []">
+              <td class="col-freeze">
+                <div class="cell-stack">
+                  <strong>{{ r.districtName || '-' }}</strong>
+                  <small>{{ r.districtCode || '-' }}</small>
+                </div>
+              </td>
+              <td class="col-freeze-2">
+                <div class="cell-stack">
+                  <strong>{{ r.blockName || '-' }}</strong>
+                  <small>{{ r.blockCode || '-' }}</small>
+                </div>
+              </td>
+              <td class="col-freeze-3">
+                <div class="cell-stack">
+                  <strong>{{ r.gpName || '-' }}</strong>
+                  <small>{{ r.gpCode || '-' }}</small>
+                </div>
+              </td>
+              <td class="num">{{ fmt(r.gpPopulation) }}</td>
+              <td>
+                <div class="cell-stack" *ngIf="r.villageName">
+                  <strong>{{ r.villageName }}</strong>
+                  <small>{{ r.villageCode || '-' }}</small>
+                </div>
+                <span *ngIf="!r.villageName">—</span>
+              </td>
+              <td class="num">{{ r.villageName ? fmt(r.villagePopulation) : '—' }}</td>
+              <td>{{ r.tbUnitName || 'N/A' }}</td>
+              <td class="num group-m">{{ fmt(r.testedNaatMonth) }}</td>
+              <td class="num group-m">{{ fmt(r.diagnosedMonth) }}</td>
+              <td class="num group-m">{{ fmt(r.treatmentOver90Month) }}</td>
+              <td class="num group-m">{{ fmt(r.poshanReceivedMonth) }}</td>
+              <td class="num group-y">{{ fmt(r.testedNaatYtd) }}</td>
+              <td class="num group-y">{{ fmt(r.diagnosedYtd) }}</td>
+              <td class="num group-y">{{ fmt(r.treatmentOver90Ytd) }}</td>
+              <td class="num group-y">{{ fmt(r.poshanReceivedYtd) }}</td>
+              <td class="num group-y">{{ fmt(r.testingPendingYtd) }}</td>
+              <td><span class="bucket-pill" [attr.data-b]="r.testingPendingBucket || '0'">{{ r.testingPendingBucket || '0' }}</span></td>
+              <td class="num group-y">{{ fmt(r.poshanPendingYtd) }}</td>
+              <td>
+                <span class="yn" [ngClass]="yesNoClass(r.isQualified)">
+                  {{ isYes(r.isQualified) ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td><span class="medal" [ngClass]="medalClass(r.medal)">{{ r.medal || 'NONE' }}</span></td>
+              <td><span class="medal" [ngClass]="medalClass(r.previousMedal)">{{ r.previousMedal || 'NONE' }}</span></td>
+            </tr>
+            <tr *ngIf="!(rankings?.tbUnitGpLineList || []).length">
+              <td colspan="21" class="text-muted text-center py-5">No rows for selected filters. Adjust GP and Apply.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- <div class="panel">
+      <div class="panel-title-row">
+        <h2>Testing pending buckets (GP count)</h2>
+        <span class="hint">Jan till {{ monthLabel }} {{ year }}</span>
+      </div>
+      <div class="bucket-grid">
+        <div class="bucket"><span>1–10</span><strong>{{ fmt(s.kpis.bucket1to10) }}</strong></div>
+        <div class="bucket"><span>11–20</span><strong>{{ fmt(s.kpis.bucket11to20) }}</strong></div>
+        <div class="bucket"><span>21–30</span><strong>{{ fmt(s.kpis.bucket21to30) }}</strong></div>
+        <div class="bucket"><span>31–50</span><strong>{{ fmt(s.kpis.bucket31to50) }}</strong></div>
+        <div class="bucket hot"><span>Above 50</span><strong>{{ fmt(s.kpis.bucketAbove50) }}</strong></div>
+      </div>
+    </div> -->
+
+    <!-- <div class="row g-3">
+      <div class="col-lg-6">
+        <div class="panel rank-panel top">
+          <h2>GP ranking — Top 10</h2>
+          <p class="subhint">Least testing pending</p>
+          <table class="table table-sm data-table rank-table">
+            <thead><tr><th>#</th><th>GP</th><th class="text-end">Pending</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let r of rankings?.top10LeastPending || []; let i = index">
+                <td><span class="rank-no">{{ i + 1 }}</span></td>
+                <td>{{ r.gpName }}</td>
+                <td class="text-end">{{ fmt(r.testingPending) }}</td>
+              </tr>
+              <tr *ngIf="!(rankings?.top10LeastPending || []).length"><td colspan="3" class="text-muted">No data</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="panel rank-panel bottom">
+          <h2>GP ranking — Bottom 10</h2>
+          <p class="subhint">Most testing pending</p>
+          <table class="table table-sm data-table rank-table">
+            <thead><tr><th>#</th><th>GP</th><th class="text-end">Pending</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let r of rankings?.bottom10MostPending || []; let i = index">
+                <td><span class="rank-no hot">{{ i + 1 }}</span></td>
+                <td>{{ r.gpName }}</td>
+                <td class="text-end">{{ fmt(r.testingPending) }}</td>
+              </tr>
+              <tr *ngIf="!(rankings?.bottom10MostPending || []).length"><td colspan="3" class="text-muted">No data</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div> -->
+  </ng-container>
+
+  <!--
+  ===================== OLD DISTRICT / BLOCK VIEW (kept for reference) =====================
+  -->
 </div>

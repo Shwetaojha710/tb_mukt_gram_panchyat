@@ -10,6 +10,24 @@ const { AppError } = require('../middleware/errorHandler');
  */
 
 const LEVELS = {
+  state: {
+    table: 'State',
+    id: 'PK_UniqueID',
+    name: 'StateName',
+    code: null,
+    population: null,
+    parent: null,
+    deleted: 'Isdeleted',
+  },
+  division: {
+    table: 'Division',
+    id: 'PK_UniqueID',
+    name: 'DivisionName',
+    code: 'DivisionCode',
+    population: 'Population',
+    parent: 'Fk_StateId',
+    deleted: 'IsDeleted',
+  },
   district: {
     table: 'District',
     id: 'PK_UniqueID',

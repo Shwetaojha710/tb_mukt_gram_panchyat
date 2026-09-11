@@ -15,4 +15,7 @@ export class ApiService {
   post<T>(path: string, body: unknown, options?: object) {
     return this.http.post<T>(`${this.baseUrl}${path}`, body, options);
   }
+  put<T>(path: string, body: unknown, options?: object) {
+    return this.http.put<T>(`${this.baseUrl}${path}`, body, options);
+  }
 }

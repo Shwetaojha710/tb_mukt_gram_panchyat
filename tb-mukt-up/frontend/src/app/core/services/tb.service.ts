@@ -30,7 +30,17 @@ export class TbService {
       .join('&');
     return this.api.get<{
       success: boolean;
-      data: { items: any[]; total: number; page: number; pageSize: number };
+      data: {
+        items: any[];
+        total: number;
+        page: number;
+        pageSize: number;
+        settings?: {
+          reportingMonthsBack: number;
+          submitDeadlineDay: number;
+          editDeadlineDay: number;
+        };
+      };
     }>(`/tb/entries${q ? `?${q}` : ''}`);
   }
 }

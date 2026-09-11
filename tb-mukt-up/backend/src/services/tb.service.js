@@ -3,7 +3,7 @@ const { AppError } = require('../middleware/errorHandler');
 const { computeIndicators, nextMedal } = require('../utils/calculations');
 const locationService = require('./location.service');
 const { canAccessLocation } = require('../middleware/auth');
-
+const settingsService = require('./settings.service');
 function validateNumbers(body) {
   const fields = ['testedNaat', 'tbDiagnosed', 'prevYearSuccessTreatment', 'poshanEligible', 'poshanReceived', 'gpPopulation'];
   for (const f of fields) {
@@ -15,8 +15,17 @@ function validateNumbers(body) {
   if (Number(body.tbDiagnosed) > Number(body.testedNaat)) {
     throw new AppError('TB cases diagnosed cannot exceed individuals tested', 400);
   }
+  if (Number(body.poshanEligible) > Number(body.tbDiagnosed)) {
+    throw new AppError(
+      'Eligible / consented to Poshan Potli should not be more than TB cases diagnosed against tested',
+      400
+    );
+  }
   if (Number(body.poshanReceived) > Number(body.poshanEligible)) {
-    throw new AppError('Poshan Potli received cannot exceed eligible patients', 400);
+    throw new AppError(
+      'TB patients received Poshan Potli should not be more than Eligible / consented to Poshan Potli',
+      400
+    );
   }
 }
 
@@ -67,10 +76,14 @@ async function saveEntry(user, body, status) {
   });
 
   const existing = await query(
-    `SELECT id FROM dbo.tb_mukt_entries WHERE gp_id = @gpId AND reporting_month = @month AND reporting_year = @year`,
+    `SELECT id, status FROM dbo.tb_mukt_entries WHERE gp_id = @gpId AND reporting_month = @month AND reporting_year = @year`,
     { gpId: body.gpId, month: body.reportingMonth, year: body.reportingYear }
   );
-
+  const existingRow = existing.recordset[0] || null;
+  const existingStatus = existingRow ? existingRow.status : null;
+  
+  await settingsService.enforceEntryWindow(user, body, status, existingStatus);
+  
   const params = {
     stateId: body.stateId || user.stateId || null,
     divisionId: body.divisionId || user.divisionId || null,
@@ -118,10 +131,17 @@ async function saveEntry(user, body, status) {
 
   let entryId;
   if (existing.recordset.length) {
-    if (status === 'SUBMITTED' || true) {
-      entryId = existing.recordset[0].id;
-      await query(
-        `
+    entryId = existing.recordset[0].id;
+    const requestedId = body.entryId ? Number(body.entryId) : null;
+    if (!requestedId || requestedId !== Number(entryId)) {
+      const monthYear = `${body.reportingMonth}/${body.reportingYear}`;
+      throw new AppError(
+        `An entry already exists for this Gram Panchayat for ${monthYear}. Duplicate entries are not allowed.`,
+        409
+      );
+    }
+    await query(
+      `
         UPDATE dbo.tb_mukt_entries SET
           state_id=@stateId, division_id=@divisionId, district_id=@districtId,
           district_code=@districtCode, district_name=@districtName, tehsil_id=@tehsilId,
@@ -140,10 +160,12 @@ async function saveEntry(user, body, status) {
           status=@status, updated_by=@userId, updated_at=SYSUTCDATETIME()
         WHERE id=@id
         `,
-        { ...params, id: entryId }
-      );
-    }
+      { ...params, id: entryId }
+    );
   } else {
+    if (body.entryId) {
+      throw new AppError('Entry not found for update', 404);
+    }
     const inserted = await query(
       `
       INSERT INTO dbo.tb_mukt_entries (
@@ -270,6 +292,38 @@ function mapEntry(row) {
   };
 }
 
+/** Attach master-settings based edit/submit flags for list UI */
+function withEditFlags(entry, settings, user) {
+  if (!entry) return entry;
+
+  const { submitDeadline, editDeadline } = settingsService.getDeadlines(
+    settings,
+    entry.reportingYear,
+    entry.reportingMonth
+  );
+
+  const now = new Date();
+  const isState = String(user?.role || '').toUpperCase() === 'STATE';
+
+  let canEdit = false;
+  if (isState) {
+    canEdit = true;
+  } else if (entry.status === 'DRAFT') {
+    canEdit = now <= submitDeadline;
+  } else if (entry.status === 'SUBMITTED') {
+    canEdit = now <= editDeadline;
+  }
+
+  return {
+    ...entry,
+    canEdit,
+    editUntil: editDeadline.toISOString(),
+    submitUntil: submitDeadline.toISOString(),
+    editDeadlineDay: settings.editDeadlineDay,
+    submitDeadlineDay: settings.submitDeadlineDay,
+  };
+}
+
 async function getEntry(user, { gpId, month, year }) {
   const result = await query(
     `SELECT * FROM dbo.tb_mukt_entries WHERE gp_id=@gpId AND reporting_month=@month AND reporting_year=@year`,
@@ -351,12 +405,21 @@ async function listEntries(user, filters = {}) {
     params
   );
 
+  const settings = await settingsService.getEntrySettings();
+
   return {
-    items: result.recordset.map(mapEntry),
+    items: result.recordset
+      .map(mapEntry)
+      .map((entry) => withEditFlags(entry, settings, user)),
     total: countRes.recordset[0].total,
     page,
     pageSize,
+    settings: {
+      reportingMonthsBack: settings.reportingMonthsBack,
+      submitDeadlineDay: settings.submitDeadlineDay,
+      editDeadlineDay: settings.editDeadlineDay,
+    },
   };
 }
 
-module.exports = { saveEntry, getEntry, listEntries, mapEntry, validateNumbers };
+module.exports = { saveEntry, getEntry, listEntries, mapEntry, validateNumbers, withEditFlags };

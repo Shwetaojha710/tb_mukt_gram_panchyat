@@ -1,5 +1,40 @@
 .location-cascade .form-label {
-  font-size: 0.88rem;
+  font-size: var(--fs-label);
+}
+
+/* Always keep District / Block / GP on one line when compact (desktop) */
+.location-cascade.compact {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  margin: 0;
+  gap: 0.55rem;
+}
+
+.location-cascade.compact > [class*='col'] {
+  flex: 1 1 0;
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.location-cascade.compact .form-label {
+  font-size: var(--fs-label);
+  margin-bottom: 0.2rem;
+}
+
+.location-cascade.compact .form-select {
+  min-height: var(--control-h);
+  padding: 0.4rem 2.1rem 0.4rem 0.6rem;
+  font-size: var(--fs-body);
+  width: 100%;
+  /* Keep Bootstrap's single custom arrow (do not force native appearance) */
+  touch-action: manipulation;
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
 }
 
 .location-cascade .form-select:disabled {
@@ -7,4 +42,26 @@
   color: var(--tb-ink);
   opacity: 1;
   cursor: not-allowed;
+}
+
+/* Mobile: full-width stacked fields — tiny side-by-side selects break tap targets */
+@media (max-width: 700px) {
+  .location-cascade.compact {
+    flex-wrap: wrap !important;
+    gap: 0.65rem;
+  }
+
+  .location-cascade.compact > [class*='col'] {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .location-cascade.compact .form-select,
+  .location-cascade .form-select {
+    min-height: 44px;
+    font-size: 16px; /* avoids mobile browser quirks / zoom */
+    padding: 0.55rem 2.1rem 0.55rem 0.75rem;
+  }
 }

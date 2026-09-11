@@ -7,33 +7,40 @@
     <a routerLink="/tb-entry" class="btn btn-primary">+ New Entry</a>
   </div>
 
-  <div class="card panel mb-3">
-    <div class="row g-3 align-items-end">
-      <div class="col-md-2">
+  <div class="card panel filters mb-3">
+    <div class="row g-2 align-items-end filters-row">
+      <div class="col-6 col-md-2">
         <label class="form-label">Year</label>
-        <input type="number" class="form-control" [(ngModel)]="year" />
+        <input type="number" class="form-control form-control-sm" [(ngModel)]="year" />
       </div>
-      <div class="col-md-2">
+      <div class="col-6 col-md-2">
         <label class="form-label">Month</label>
-        <select class="form-select" [(ngModel)]="month">
+        <select class="form-select form-select-sm" [(ngModel)]="month">
           <option [ngValue]="null">All</option>
           <option *ngFor="let m of months" [ngValue]="m.id">{{ m.name }}</option>
         </select>
       </div>
-      <div class="col-md-2">
+      <div class="col-6 col-md-2">
         <label class="form-label">Status</label>
-        <select class="form-select" [(ngModel)]="status">
+        <select class="form-select form-select-sm" [(ngModel)]="status">
           <option value="">All</option>
           <option value="SUBMITTED">Submitted</option>
           <option value="DRAFT">Draft</option>
         </select>
       </div>
-      <div class="col-md-2">
-        <button class="btn btn-primary w-100" type="button" (click)="load(true)" [disabled]="loading">Apply</button>
+      <div class="col-12 col-md-6">
+        <app-location-cascade
+          [value]="location"
+          (valueChange)="onLocationChange($event)"
+          [showVillage]="false"
+          [compact]="true"
+          [lockDistrict]="lockDistrict"
+          [lockBlock]="lockBlock"
+        ></app-location-cascade>
       </div>
     </div>
-    <div class="mt-3">
-      <app-location-cascade [value]="location" (valueChange)="location = $event" [showVillage]="false"></app-location-cascade>
+    <div class="filters-actions">
+      <button class="btn btn-primary btn-sm" type="button" (click)="load(true)" [disabled]="loading">Apply</button>
     </div>
   </div>
 
@@ -56,6 +63,7 @@
             <th>Diagnosed</th>
             <th>Status</th>
             <th>Qualified</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -78,9 +86,20 @@
                 {{ e.isQualified ? 'Yes' : 'No' }}
               </span>
             </td>
+            <td>
+              <button
+                *ngIf="canEdit(e)"
+                type="button"
+                class="btn btn-outline-primary btn-sm edit-btn"
+                (click)="openEdit(e)"
+              >
+                Edit
+              </button>
+              <span *ngIf="!canEdit(e)" class="text-muted small">—</span>
+            </td>
           </tr>
           <tr *ngIf="!items.length">
-            <td colspan="10" class="text-center text-muted py-4">No entries found</td>
+            <td colspan="11" class="text-center text-muted py-4">No entries found</td>
           </tr>
         </tbody>
       </table>

@@ -32,23 +32,39 @@ export const routes: Routes = [
       },
       {
         path: 'dashboard/district',
-        canActivate: [roleGuard(['STATE', 'DIVISION', 'DISTRICT', 'TEHSIL'])],
+        canActivate: [roleGuard(['DISTRICT'])],
         loadComponent: () =>
           import('./dashboard/district/district.component').then((m) => m.DistrictDashboardComponent),
       },
       {
         path: 'dashboard/block',
+        canActivate: [roleGuard(['TEHSIL', 'BLOCK'])],
         loadComponent: () =>
           import('./dashboard/block/block.component').then((m) => m.BlockDashboardComponent),
       },
       {
         path: 'tb-entry',
+        canActivate: [roleGuard(['TEHSIL', 'BLOCK'])],
         loadComponent: () => import('./tb-entry/tb-entry.component').then((m) => m.TbEntryComponent),
       },
       {
         path: 'tb-entries',
+        canActivate: [roleGuard(['TEHSIL', 'BLOCK'])],
         loadComponent: () =>
           import('./tb-entry/tb-entry-list.component').then((m) => m.TbEntryListComponent),
+      },
+      {
+        path: 'tb-upload',
+        canActivate: [roleGuard(['TEHSIL', 'BLOCK'])],
+        loadComponent: () => import('./tb-upload/tb-upload.component').then((m) => m.TbUploadComponent),
+      },
+      {
+        path: 'settings/tb-entry',
+        canActivate: [roleGuard(['STATE'])],
+        loadComponent: () =>
+          import('./settings/tb-entry-settings/tb-entry-settings.component').then(
+            (m) => m.TbEntrySettingsComponent
+          ),
       },
     ],
   },

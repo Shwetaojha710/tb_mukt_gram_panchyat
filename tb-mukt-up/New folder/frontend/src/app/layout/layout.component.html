@@ -1,0 +1,65 @@
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="side-brand">
+      <app-brand-logo size="sm" />
+      <div>
+        <strong>TB Mukt UP</strong>
+        <span>टीबी मुक्त उत्तर प्रदेश</span>
+      </div>
+    </div>
+
+    <nav class="side-nav">
+      <p class="nav-label">Overview</p>
+      <a routerLink="/dashboard/state" routerLinkActive="active" *ngIf="user?.role === 'STATE' || user?.role === 'DIVISION'">
+        <span class="nav-ico" aria-hidden="true">▣</span>
+        State Dashboard
+      </a>
+      <a
+        routerLink="/dashboard/district"
+        routerLinkActive="active"
+        *ngIf="user?.role === 'STATE' || user?.role === 'DIVISION' || user?.role === 'DISTRICT' || user?.role === 'TEHSIL'"
+      >
+        <span class="nav-ico" aria-hidden="true">▦</span>
+        District Dashboard
+      </a>
+      <a routerLink="/dashboard/block" routerLinkActive="active">
+        <span class="nav-ico" aria-hidden="true">▤</span>
+        Block Dashboard
+      </a>
+
+      <p class="nav-label">Data entry</p>
+      <a routerLink="/tb-entry" routerLinkActive="active">
+        <span class="nav-ico" aria-hidden="true">✎</span>
+        TB Entry
+      </a>
+      <a routerLink="/tb-entries" routerLinkActive="active">
+        <span class="nav-ico" aria-hidden="true">☰</span>
+        TB Entry List
+      </a>
+    </nav>
+
+    <div class="side-user" *ngIf="user as u">
+      <div class="avatar">{{ (u.fullName || u.username || 'U').charAt(0) }}</div>
+      <div class="meta">
+        <strong>{{ u.fullName || u.username }}</strong>
+        <span>{{ u.role }}</span>
+      </div>
+      <button class="logout" type="button" (click)="logout()" title="Logout">⎋</button>
+    </div>
+  </aside>
+
+  <div class="main-column">
+    <header class="topbar">
+      <div class="topbar-brand">
+        <app-brand-logo size="xs" />
+        <div>
+          <h1 class="page-title">TB Mukt Gram Panchayat, Uttar Pradesh</h1>
+          <p class="page-sub">Health Department · Government of Uttar Pradesh</p>
+        </div>
+      </div>
+    </header>
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

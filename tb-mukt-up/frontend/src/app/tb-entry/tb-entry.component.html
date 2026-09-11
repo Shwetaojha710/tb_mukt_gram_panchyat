@@ -2,20 +2,29 @@
   <div class="page-head">
     <div>
       <p class="eyebrow">Monthly GP reporting</p>
-      <h1>TB Data Entry</h1>
-      <p class="lead">ग्राम पंचायत मासिक रिपोर्टिंग — location &amp; facility details auto-fill from your login.</p>
+      <h1>TB Entry</h1>
+      <!-- <p class="lead">ग्राम पंचायत मासिक रिपोर्टिंग — location auto-fill from your login.</p> -->
     </div>
     <a routerLink="/tb-entries" class="btn btn-outline-primary list-btn">View Entry List</a>
   </div>
 
+  <!-- 1 · Location -->
   <div class="panel">
     <div class="panel-head">
       <h2>1 · Location</h2>
-      <span class="chip" *ngIf="isBlockUser">Block user · locked fields</span>
+      <div class="d-flex gap-2 flex-wrap">
+        <span class="chip soft" *ngIf="isEditMode">Editing existing entry</span>
+        <span class="chip" *ngIf="isBlockUser">Block user · locked fields</span>
+      </div>
     </div>
+    <!-- <div class="panel-head">
+      <h2>1 · Location</h2>
+      <span class="chip" *ngIf="isBlockUser">Block user · locked fields</span>
+    </div> -->
 
     <app-location-cascade
       [value]="location"
+      [compact]="true"
       [lockDistrict]="lockDistrict"
       [lockBlock]="lockBlock"
       [lockGp]="lockGp"
@@ -23,87 +32,196 @@
       (valueChange)="onLocationChange($event)"
       (gpSelected)="onGpSelected($event)"
     ></app-location-cascade>
-
-    <div class="meta-grid">
-      <div class="meta-item">
-        <label>District</label>
-        <div class="readonly">{{ context['districtCode'] || '-' }} / {{ context['districtName'] || '-' }}</div>
-      </div>
-      <div class="meta-item">
-        <label>Block</label>
-        <div class="readonly">{{ context['blockCode'] || context['tehsilCode'] || '-' }} / {{ context['blockName'] || context['tehsilName'] || '-' }}</div>
-      </div>
-      <div class="meta-item">
-        <label>Gram Panchayat</label>
-        <div class="readonly">{{ context['gpCode'] || '-' }} / {{ context['gpName'] || '-' }}</div>
-      </div>
-      <div class="meta-item">
-        <label>GP Population</label>
-        <div class="readonly">{{ context['gpPopulation'] || 0 }}</div>
-      </div>
-      <div class="meta-item">
-        <label>Village</label>
-        <div class="readonly">{{ context['villageCode'] || '-' }} / {{ context['villageName'] || '-' }}</div>
-      </div>
-      <div class="meta-item">
-        <label>Village Population</label>
-        <div class="readonly">{{ context['villagePopulation'] || 0 }}</div>
-      </div>
-      <div class="meta-item meta-wide">
-        <label>TB Unit / Facility</label>
-        <div class="readonly highlight">{{ context['tbUnitCode'] || '-' }} / {{ context['tbUnitName'] || '-' }}</div>
-      </div>
-    </div>
   </div>
 
-  <div class="panel">
-    <div class="panel-head">
-      <h2>2 · Reporting inputs</h2>
-    </div>
+  <form [formGroup]="form">
+    <!-- 2 · Reporting period -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2>2 · Reporting period</h2>
+        <!-- <span class="chip soft">Last 6 completed months only</span> -->
+      </div>
 
-    <form [formGroup]="form">
-      <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Reporting Month *</label>
-          <select class="form-select" formControlName="reportingMonth">
-            <option *ngFor="let m of months" [ngValue]="m.id">{{ m.name }}</option>
-          </select>
-        </div>
-        <div class="col-md-3">
+      <div class="row g-3 period-row">
+        <div class="col-md-6">
           <label class="form-label">Reporting Year *</label>
           <select class="form-select" formControlName="reportingYear">
+            <option [ngValue]="null">Select year </option>
             <option *ngFor="let y of years" [ngValue]="y">{{ y }}</option>
           </select>
+          <!-- <div class="field-hint">Current year or earlier (from last 6 months window)</div> -->
         </div>
         <div class="col-md-6">
-          <label class="form-label">Presumptive individuals tested through NAAT *</label>
-          <input type="number" min="0" class="form-control" formControlName="testedNaat" />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">TB cases diagnosed among tested *</label>
-          <input type="number" min="0" class="form-control" formControlName="tbDiagnosed" />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Previous-year successful treatment % / count *</label>
-          <input type="number" min="0" class="form-control" formControlName="prevYearSuccessTreatment" />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Eligible / consented for Poshan Potli *</label>
-          <input type="number" min="0" class="form-control" formControlName="poshanEligible" />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">TB patients receiving Poshan Potli *</label>
-          <input type="number" min="0" class="form-control" formControlName="poshanReceived" />
+          <label class="form-label">Reporting Month *</label>
+          <select class="form-select" formControlName="reportingMonth">
+            <option [ngValue]="null">{{ form.get('reportingYear')?.value ? 'Select month' : 'Select year first' }}</option>
+            <option *ngFor="let m of availableMonths" [ngValue]="m.id">{{ m.name }}</option>
+          </select>
+          <!-- <div class="field-hint" *ngIf="availableMonths.length"> -->
+            <!-- Allowed: {{ availableMonthNames }} -->
+          <!-- </div> -->
         </div>
       </div>
-    </form>
-
-    <div class="actions">
-      <button class="btn btn-ghost" type="button" (click)="saveDraft()" [disabled]="loading">Save Draft</button>
-      <button class="btn btn-primary submit-btn" type="button" (click)="submit()" [disabled]="loading">
-        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-        Submit Entry
-      </button>
     </div>
-  </div>
+
+    <!-- 3 · Population & indicators (sequence: TB Unit → pops → metrics) -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2>3 · Population &amp; indicators</h2>
+      </div>
+
+      <div class="duplicate-alert" *ngIf="duplicateEntry">
+        <strong>Duplicate entry not allowed.</strong>
+        Data already exists for this GP for
+        {{ monthLabel(form.get('reportingMonth')?.value) }} {{ form.get('reportingYear')?.value }}
+        <span *ngIf="duplicateStatus">({{ duplicateStatus }})</span>.
+      </div>
+
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label">TB Unit (CHC/PHC)</label>
+          <select
+            class="form-select"
+            *ngIf="tbUnits.length; else tbUnitReadonly"
+            [value]="selectedTbUnitId ?? ''"
+            (change)="onTbUnitChange($event)"
+          >
+            <option value="" disabled>Select TB Unit</option>
+            <option *ngFor="let u of tbUnits" [value]="u.id">{{ u.name }}</option>
+          </select>
+          <ng-template #tbUnitReadonly>
+            <div class="readonly highlight">
+              {{ context['tbUnitName'] || 'Select GP to load TB Unit' }}
+            </div>
+          </ng-template>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">GP Population</label>
+          <div class="readonly">{{ context['gpPopulation'] || 0 }}</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Village Population</label>
+          <div class="readonly">{{ context['villagePopulation'] || 0 }}</div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Presumptive tested through NAAT *</label>
+          <input
+            type="number"
+            min="0"
+            class="form-control"
+            formControlName="testedNaat"
+            placeholder="Enter value"
+            [class.is-invalid]="isInvalid('testedNaat')"
+          />
+          <div class="invalid-feedback d-block" *ngIf="isInvalid('testedNaat')">
+            {{ fieldError('testedNaat') }}
+          </div>
+          <div class="field-recommend" *ngIf="digitRecommend('testedNaat')">
+            {{ digitRecommend('testedNaat') }}
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">TB cases diagnosed against tested *</label>
+          <input
+            type="number"
+            min="0"
+            class="form-control"
+            formControlName="tbDiagnosed"
+            placeholder="Enter value"
+            [class.is-invalid]="isInvalid('tbDiagnosed')"
+          />
+          <div class="invalid-feedback d-block" *ngIf="isInvalid('tbDiagnosed')">
+            {{ fieldError('tbDiagnosed') }}
+          </div>
+          <div class="field-recommend" *ngIf="digitRecommend('tbDiagnosed')">
+            {{ digitRecommend('tbDiagnosed') }}
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Previous year successful treatment (%) *</label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            class="form-control"
+            formControlName="prevYearSuccessTreatment"
+            placeholder="Enter %"
+            (input)="enforceMax('prevYearSuccessTreatment')"
+            [class.is-invalid]="isInvalid('prevYearSuccessTreatment')"
+          />
+          <div class="field-hint">0–100%</div>
+          <div class="invalid-feedback d-block" *ngIf="isInvalid('prevYearSuccessTreatment')">
+            {{ fieldError('prevYearSuccessTreatment') }}
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Eligible / consented to Poshan Potli *</label>
+          <input
+            type="number"
+            min="0"
+            class="form-control"
+            formControlName="poshanEligible"
+            placeholder="Enter value"
+            (blur)="onPoshanRelationBlur('poshanEligible')"
+            [class.is-invalid]="isInvalid('poshanEligible') || !!poshanRelationHint('poshanEligible')"
+          />
+          <div class="invalid-feedback d-block" *ngIf="isInvalid('poshanEligible')">
+            {{ fieldError('poshanEligible') }}
+          </div>
+          <div class="field-recommend" *ngIf="poshanRelationHint('poshanEligible')">
+            {{ poshanRelationHint('poshanEligible') }}
+          </div>
+          <div class="field-recommend" *ngIf="!poshanRelationHint('poshanEligible') && digitRecommend('poshanEligible')">
+            {{ digitRecommend('poshanEligible') }}
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">TB patients received Poshan Potli *</label>
+          <input
+            type="number"
+            min="0"
+            class="form-control"
+            formControlName="poshanReceived"
+            placeholder="Enter value"
+            (blur)="onPoshanRelationBlur('poshanReceived')"
+            [class.is-invalid]="isInvalid('poshanReceived') || !!poshanRelationHint('poshanReceived')"
+          />
+          <div class="invalid-feedback d-block" *ngIf="isInvalid('poshanReceived')">
+            {{ fieldError('poshanReceived') }}
+          </div>
+          <div class="field-recommend" *ngIf="poshanRelationHint('poshanReceived')">
+            {{ poshanRelationHint('poshanReceived') }}
+          </div>
+          <div class="field-recommend" *ngIf="!poshanRelationHint('poshanReceived') && digitRecommend('poshanReceived')">
+            {{ digitRecommend('poshanReceived') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <!-- <button class="btn btn-ghost" type="button" (click)="saveDraft()" [disabled]="loading || duplicateEntry">
+          Save Draft
+        </button> -->
+        <!-- <button class="btn btn-primary submit-btn" type="button" (click)="submit()" [disabled]="loading || duplicateEntry">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+          Submit Entry
+        </button> -->
+        <button
+  class="btn btn-primary submit-btn"
+  type="button"
+  (click)="submit()"
+  [disabled]="loading || (!isEditMode && duplicateEntry)"
+>
+  <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+  {{ loading ? 'Saving…' : (isEditMode ? 'Update & Submit' : 'Submit Entry') }}
+</button>
+      </div>
+    </div>
+  </form>
 </div>

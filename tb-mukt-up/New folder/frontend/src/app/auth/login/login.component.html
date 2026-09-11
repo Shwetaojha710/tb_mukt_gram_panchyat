@@ -1,0 +1,67 @@
+<div class="login-page">
+  <section class="login-hero" aria-label="TB Mukt brand">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <app-brand-logo size="hero" />
+      <h1 class="brand-title">TB Mukt<br />Uttar Pradesh</h1>
+      <p class="hero-hi">टीबी मुक्त उत्तर प्रदेश</p>
+      <p class="hero-lead">Gram Panchayat reporting for a TB-free Uttar Pradesh.</p>
+      <ul class="hero-points">
+        <!-- <li>District → Block → GP cascade</li> -->
+        <!-- <li>Monthly NAAT &amp; Poshan tracking</li> -->
+        <!-- <li>Block-level dashboards</li> -->
+      </ul>
+    </div>
+    <p class="hero-foot">Government of Uttar Pradesh · Health Department</p>
+  </section>
+
+  <section class="login-panel">
+    <div class="login-card">
+      <header class="login-head">
+        <p class="eyebrow">Secure sign-in</p>
+        <h2>Welcome back</h2>
+        <!-- <p class="muted">Block User accounts only. Use your Facility Admin login.</p> -->
+      </header>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="field">
+          <label class="form-label" for="username">Login ID</label>
+          <input
+            id="username"
+            class="form-control"
+            formControlName="username"
+            placeholder="Enter Login ID"
+            autocomplete="username"
+          />
+        </div>
+
+        <div class="field">
+          <label class="form-label" for="password">Password</label>
+          <div class="password-row">
+            <input
+              id="password"
+              class="form-control"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Enter password"
+              autocomplete="current-password"
+            />
+            <button type="button" class="toggle-pw" (click)="showPassword = !showPassword">
+              {{ showPassword ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="links">
+          <a routerLink="/forgot-password">Forgot password?</a>
+          <a routerLink="/register">New registration</a>
+        </div>
+
+        <button class="btn btn-primary login-btn" type="submit" [disabled]="loading">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ loading ? 'Signing in…' : 'Sign in' }}
+        </button>
+      </form>
+    </div>
+  </section>
+</div>

@@ -32,6 +32,12 @@ export interface LocationSelection {
 export class LocationCascadeComponent implements OnInit, OnChanges {
   @Input() showVillage = true;
   @Input() disabled = false;
+  /** Compact single-row filter layout */
+  @Input() compact = false;
+  /** Hide district dropdown (district already locked from login) */
+  @Input() hideDistrict = false;
+  /** Hide block dropdown (block already locked from login) */
+  @Input() hideBlock = false;
   /** Lock district/block (and optionally gp/village) for scoped users */
   @Input() lockDistrict = false;
   @Input() lockBlock = false;
@@ -56,9 +62,42 @@ export class LocationCascadeComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['value'] && this.districtsLoaded) {
-      this.hydrateFromValue();
-    }
+    if (!changes['value'] || !this.districtsLoaded) return;
+    // Parent often echoes the same selection after emit — skip reload so mobile
+    // native <select> pickers are not rebuilt mid-interaction.
+    const prev = changes['value'].previousValue as LocationSelection | undefined;
+    const curr = changes['value'].currentValue as LocationSelection | undefined;
+    if (prev && curr && this.sameSelection(prev, curr)) return;
+    this.hydrateFromValue();
+  }
+
+  /** Native option values are strings — required for Android/Samsung pickers. */
+  idStr(id: number | null | undefined): string {
+    return id == null ? '' : String(id);
+  }
+
+  private normalizeItems(items: LocationItem[]): LocationItem[] {
+    return (items || []).map((item) => ({
+      ...item,
+      id: Number(item.id),
+    }));
+  }
+
+  private toId(raw: string | number | null | undefined): number | null {
+    if (raw === '' || raw == null) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  private sameSelection(a: LocationSelection, b: LocationSelection): boolean {
+    const blockA = a.blockId || a.tehsilId || null;
+    const blockB = b.blockId || b.tehsilId || null;
+    return (
+      (a.districtId || null) === (b.districtId || null) &&
+      blockA === blockB &&
+      (a.gpId || null) === (b.gpId || null) &&
+      (a.villageId || null) === (b.villageId || null)
+    );
   }
 
   private syncBlockIds() {
@@ -67,11 +106,31 @@ export class LocationCascadeComponent implements OnInit, OnChanges {
     this.value.tehsilId = blockId;
   }
 
+  onDistrictIdChange(raw: string | number | null) {
+    this.value.districtId = this.toId(raw);
+    this.onDistrictChange();
+  }
+
+  onBlockIdChange(raw: string | number | null) {
+    this.value.blockId = this.toId(raw);
+    this.onBlockChange();
+  }
+
+  onGpIdChange(raw: string | number | null) {
+    this.value.gpId = this.toId(raw);
+    this.onGpChange();
+  }
+
+  onVillageIdChange(raw: string | number | null) {
+    this.value.villageId = this.toId(raw);
+    this.onVillageChange();
+  }
+
   loadDistrictsAndHydrate() {
     this.loading = true;
     this.locationService.getDistricts().subscribe({
       next: (res) => {
-        this.districts = res.data || [];
+        this.districts = this.normalizeItems(res.data || []);
         this.districtsLoaded = true;
         this.loading = false;
         this.hydrateFromValue();
@@ -126,7 +185,7 @@ export class LocationCascadeComponent implements OnInit, OnChanges {
     this.hydrating = true;
     this.locationService.getBlocks(this.value.districtId).subscribe({
       next: (res) => {
-        this.blocks = res.data || [];
+        this.blocks = this.normalizeItems(res.data || []);
         if (!this.value.blockId) {
           this.hydrating = false;
           this.emit();
@@ -134,7 +193,7 @@ export class LocationCascadeComponent implements OnInit, OnChanges {
         }
         this.locationService.getGps(this.value.blockId).subscribe({
           next: (gpRes) => {
-            this.gps = gpRes.data || [];
+            this.gps = this.normalizeItems(gpRes.data || []);
             const gp = this.gps.find((g) => g.id === this.value.gpId) || null;
             this.gpSelected.emit(gp);
             if (!this.value.gpId || !this.showVillage) {
@@ -144,7 +203,7 @@ export class LocationCascadeComponent implements OnInit, OnChanges {
             }
             this.locationService.getVillages(this.value.gpId).subscribe({
               next: (vRes) => {
-                this.villages = vRes.data || [];
+                this.villages = this.normalizeItems(vRes.data || []);
                 this.hydrating = false;
                 this.emit();
               },
@@ -173,7 +232,7 @@ export class LocationCascadeComponent implements OnInit, OnChanges {
     this.emit();
     if (!this.value.districtId) return;
     this.locationService.getBlocks(this.value.districtId).subscribe((res) => {
-      this.blocks = res.data || [];
+      this.blocks = this.normalizeItems(res.data || []);
     });
   }
 
@@ -184,7 +243,7 @@ export class LocationCascadeComponent implements OnInit, OnChanges {
     this.emit();
     if (!this.value.blockId) return;
     this.locationService.getGps(this.value.blockId).subscribe((res) => {
-      this.gps = res.data || [];
+      this.gps = this.normalizeItems(res.data || []);
     });
   }
 
@@ -196,7 +255,7 @@ export class LocationCascadeComponent implements OnInit, OnChanges {
     this.emit();
     if (!this.value.gpId || !this.showVillage) return;
     this.locationService.getVillages(this.value.gpId).subscribe((res) => {
-      this.villages = res.data || [];
+      this.villages = this.normalizeItems(res.data || []);
     });
   }
 

@@ -1,14 +1,15 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { NotifyService } from '../../core/services/notify.service';
+import { APP_LOGO, NHM_LOGO, NTEP_LOGO } from '../../core/constants/branding';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
@@ -17,6 +18,10 @@ export class LoginComponent {
   private auth = inject(AuthService);
   private notify = inject(NotifyService);
   private router = inject(Router);
+
+  readonly appLogo = APP_LOGO;
+  readonly nhmLogo = NHM_LOGO;
+  readonly ntepLogo = NTEP_LOGO;
 
   loading = false;
   showPassword = false;

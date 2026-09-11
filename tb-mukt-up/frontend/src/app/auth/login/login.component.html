@@ -1,36 +1,60 @@
 <div class="login-page">
   <section class="login-hero" aria-label="TB Mukt brand">
     <div class="hero-glow" aria-hidden="true"></div>
-    <div class="hero-inner">
-      <img src="assets/logo.png" alt="TB Mukt Uttar Pradesh" class="hero-logo" />
-      <h1 class="brand-title">TB Mukt<br />Uttar Pradesh</h1>
-      <p class="hero-hi">टीबी मुक्त उत्तर प्रदेश</p>
-      <p class="hero-lead">Gram Panchayat reporting for a TB-free Uttar Pradesh.</p>
-      <ul class="hero-points">
-        <li>District → Block → GP cascade</li>
-        <li>Monthly NAAT &amp; Poshan tracking</li>
-        <li>Block-level dashboards</li>
-      </ul>
+    <div class="hero-glow hero-glow-2" aria-hidden="true"></div>
+    <div class="hero-skyline" aria-hidden="true"></div>
+
+    <div class="corner-logos" aria-label="Programme logos">
+      <div class="logo-pill logo-corner logo-corner-left">
+        <img [src]="nhmLogo" alt="National Health Mission" draggable="false" />
+      </div>
+      <div class="logo-pill logo-corner logo-corner-right">
+        <img [src]="ntepLogo" alt="TB Mukt Bharat Abhiyan" draggable="false" />
+      </div>
     </div>
-    <p class="hero-foot">Government of Uttar Pradesh · Health Department</p>
+
+    <div class="hero-inner">
+      <div class="logo-pill logo-pill-brand logo-center">
+        <img [src]="appLogo" alt="TB Mukt Gram Panchayat, Uttar Pradesh" draggable="false" />
+      </div>
+
+      <!-- <p class="logo-caption">NHM · TB Mukt Gram Panchayat, Uttar Pradesh · TB-मुक्त भारत अभियान</p> -->
+
+      <h1 class="brand-title">
+        <span class="title-white">TB Mukt </span>
+        <span class="title-mint">Gram Panchayat, Uttar Pradesh</span>
+      </h1>
+      <p class="hero-hi">टीबी मुक्त ग्राम पंचायत, उत्तर प्रदेश</p>
+      <!-- <p class="hero-lead">ग्राम पंचायत टीबी मुक्त भारत अभियान के लिए रिपोर्ट कर रहा है।</p> -->
+    </div>
+
+    <p class="hero-foot">
+      <span class="foot-ico" aria-hidden="true">🛡</span>
+      Government of Uttar Pradesh | Health Department · NHM / NTEP
+    </p>
   </section>
 
   <section class="login-panel">
     <div class="login-card">
+      <div class="card-logo-row" aria-hidden="true">
+        <!-- <img [src]="nhmLogo" alt="" draggable="false" /> -->
+        <img [src]="appLogo" alt="" draggable="false" />
+        <!-- <img [src]="ntepLogo" alt="" draggable="false" /> -->
+      </div>
+
       <header class="login-head">
-        <p class="eyebrow">Secure sign-in</p>
-        <h2>Welcome back</h2>
-        <p class="muted">Block User accounts only. Use your Facility Admin login.</p>
+        <h2>Welcome back!</h2>
+        <p class="muted">Please sign in to continue</p>
       </header>
 
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="field">
-          <label class="form-label" for="username">Username / User ID / Mobile</label>
+          <label class="form-label" for="username">Login ID</label>
           <input
             id="username"
             class="form-control"
             formControlName="username"
-            placeholder="Enter username, user ID or mobile"
+            placeholder="Enter login ID"
             autocomplete="username"
           />
         </div>
@@ -52,16 +76,13 @@
           </div>
         </div>
 
-        <div class="links">
-          <a routerLink="/forgot-password">Forgot password?</a>
-          <a routerLink="/register">New registration</a>
-        </div>
-
         <button class="btn btn-primary login-btn" type="submit" [disabled]="loading">
           <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
           {{ loading ? 'Signing in…' : 'Sign in' }}
         </button>
       </form>
+
+      <!-- <p class="card-foot">Together, we can build a <strong>TB-free</strong> Uttar Pradesh</p> -->
     </div>
   </section>
 </div>

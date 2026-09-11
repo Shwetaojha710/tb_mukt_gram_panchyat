@@ -1,19 +1,64 @@
-.page-head h1 { margin: 0; color: #0b4f8a; }
-.page-head p { color: #5b6b7c; margin: 0.2rem 0 0; }
+.page-head h1 {
+  margin: 0;
+  color: var(--tb-blue-deep);
+  font-size: var(--fs-title);
+}
+
+.page-head p {
+  color: var(--tb-muted);
+  margin: 0.15rem 0 0;
+  font-size: var(--fs-sm);
+}
+
 .panel {
-  border: 1px solid #d9e6f2;
-  border-radius: 14px;
-  padding: 1rem 1.1rem;
+  border: 1px solid var(--tb-line);
+  border-radius: var(--tb-radius);
+  padding: 0.85rem 0.95rem;
   background: #fff;
 }
+
+.filters {
+  padding: 0.65rem 0.75rem;
+}
+
+.filters .form-label {
+  margin-bottom: 0.15rem;
+  font-size: var(--fs-label);
+}
+
+.filters-row {
+  margin-bottom: 0;
+}
+
+.filters-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.55rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--tb-line);
+}
+
+.filters-actions .btn {
+  min-width: 5.5rem;
+}
+
 .badge-status {
   display: inline-block;
-  padding: 0.2rem 0.55rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 999px;
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
 }
+
 .badge-status.submitted { background: #e3f2fd; color: #0b4f8a; }
 .badge-status.draft { background: #fff8e1; color: #8d6e00; }
 .badge-status.qualified { background: #e8f5e9; color: #1b5e20; }
 .badge-status.not-qualified { background: #ffebee; color: #b71c1c; }
+
+.table {
+  font-size: var(--fs-body);
+}
+.edit-btn {
+  min-width: 4.2rem;
+  font-weight: 650;
+}
