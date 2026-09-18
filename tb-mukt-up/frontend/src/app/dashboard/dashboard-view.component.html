@@ -15,46 +15,55 @@
   <!-- Compact filter bar — State / District / Block -->
   <div class="panel filters-panel">
     <div class="filter-bar">
-      <div class="f-item f-year">
-        <label class="form-label">Year</label>
-        <input class="form-control form-control-sm" type="number" [(ngModel)]="year" />
-      </div>
-      <div class="f-item f-month">
-        <label class="form-label">Month</label>
-        <select class="form-select form-select-sm" [(ngModel)]="reportingMonth">
-          <option *ngFor="let m of months" [ngValue]="m.id">{{ m.name }}</option>
-        </select>
-      </div>
       <div class="f-item f-from">
         <label class="form-label">From</label>
-        <input class="form-control form-control-sm" type="date" [(ngModel)]="dateFrom" />
+        <input
+          class="form-control form-control-sm"
+          type="month"
+          [(ngModel)]="dateFrom"
+          [attr.min]="monthMin"
+          [attr.max]="dateTo || monthMax"
+        />
       </div>
       <div class="f-item f-to">
         <label class="form-label">To</label>
-        <input class="form-control form-control-sm" type="date" [(ngModel)]="dateTo" />
+        <input
+          class="form-control form-control-sm"
+          type="month"
+          [(ngModel)]="dateTo"
+          [attr.min]="dateFrom || monthMin"
+          [attr.max]="monthMax"
+        />
       </div>
       <div
-        class="f-item f-location"
+        class="f-item f-location-actions"
         [class.loc-block]="isBlock"
         [class.loc-district]="isDistrict"
         [class.loc-state]="isState"
       >
-        <app-location-cascade
-          [value]="location"
-          (valueChange)="location = $event"
-          [showVillage]="false"
-          [compact]="true"
-          [hideDistrict]="isDistrict || isBlock || lockDistrict"
-          [hideBlock]="isBlock || lockBlock"
-          [lockDistrict]="lockDistrict"
-          [lockBlock]="lockBlock"
-        ></app-location-cascade>
-      </div>
-      <div class="f-item f-apply">
-        <label class="form-label d-none d-md-block">&nbsp;</label>
-        <button class="btn btn-primary btn-sm apply-btn" type="button" (click)="load()" [disabled]="loading">
-          {{ loading ? 'Loading…' : 'Apply' }}
-        </button>
+        <div class="f-location">
+          <app-location-cascade
+            [value]="location"
+            (valueChange)="location = $event"
+            [showVillage]="false"
+            [compact]="true"
+            [hideDistrict]="isDistrict || isBlock || lockDistrict"
+            [hideBlock]="isBlock || lockBlock"
+            [lockDistrict]="lockDistrict"
+            [lockBlock]="lockBlock"
+          ></app-location-cascade>
+        </div>
+        <div class="f-apply">
+          <label class="form-label d-none d-md-block">&nbsp;</label>
+          <div class="filter-actions">
+            <button class="btn btn-primary btn-sm apply-btn" type="button" (click)="load()" [disabled]="loading">
+              {{ loading ? 'Loading…' : 'Apply' }}
+            </button>
+            <button class="btn btn-outline-secondary btn-sm reset-btn" type="button" (click)="resetFilters()" [disabled]="loading">
+              Reset
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -99,7 +108,7 @@
           <h2>State line list</h2>
           <p class="subhint">Scroll only inside this table · District / Block / GP stay sticky on the left</p>
         </div>
-        <span class="period-chip">{{ monthLabel }} {{ year }}</span>
+        <span class="period-chip">{{ periodRangeLabel }}</span>
       </div>
 
       <div class="legend-row">
@@ -119,8 +128,6 @@
               <th class="col-freeze-3">Block</th>
               <th class="col-freeze-4">GP</th>
               <th>GP Pop.</th>
-              <th>Village</th>
-              <th>Village Pop.</th>
               <th>TB Unit</th>
               <th class="group-m">NAAT (mo)</th>
               <th class="group-m">Diagnosed (mo)</th>
@@ -160,14 +167,6 @@
                 </div>
               </td>
               <td class="num">{{ fmt(r.gpPopulation) }}</td>
-              <td>
-                <div class="cell-stack" *ngIf="r.villageName">
-                  <strong>{{ r.villageName }}</strong>
-                  <small>{{ r.villageCode || '-' }}</small>
-                </div>
-                <span *ngIf="!r.villageName">—</span>
-              </td>
-              <td class="num">{{ r.villageName ? fmt(r.villagePopulation) : '—' }}</td>
               <td>{{ r.tbUnitName || 'N/A' }}</td>
               <td class="num group-m">{{ fmt(r.testedNaatMonth) }}</td>
               <td class="num group-m">{{ fmt(r.diagnosedMonth) }}</td>
@@ -189,7 +188,7 @@
               <td><span class="medal" [ngClass]="medalClass(r.previousMedal)">{{ r.previousMedal || 'NONE' }}</span></td>
             </tr>
             <tr *ngIf="!(rankings?.tbUnitGpLineList || []).length">
-              <td colspan="22" class="text-muted text-center py-5">No rows for selected filters. Adjust filters and Apply.</td>
+              <td colspan="20" class="text-muted text-center py-5">No rows for selected filters. Adjust filters and Apply.</td>
             </tr>
           </tbody>
         </table>
@@ -285,7 +284,7 @@
           <h2>District line list</h2>
           <p class="subhint">Scroll only inside this table · Block / GP stay sticky on the left</p>
         </div>
-        <span class="period-chip">{{ monthLabel }} {{ year }}</span>
+        <span class="period-chip">{{ periodRangeLabel }}</span>
       </div>
 
       <div class="legend-row">
@@ -304,8 +303,6 @@
               <th class="col-freeze-2">Block</th>
               <th class="col-freeze-3">GP</th>
               <th>GP Pop.</th>
-              <th>Village</th>
-              <th>Village Pop.</th>
               <th>TB Unit</th>
               <th class="group-m">NAAT (mo)</th>
               <th class="group-m">Diagnosed (mo)</th>
@@ -344,14 +341,6 @@
                 </div>
               </td>
               <td class="num">{{ fmt(r.gpPopulation) }}</td>
-              <td>
-                <div class="cell-stack" *ngIf="r.villageName">
-                  <strong>{{ r.villageName }}</strong>
-                  <small>{{ r.villageCode || '-' }}</small>
-                </div>
-                <span *ngIf="!r.villageName">—</span>
-              </td>
-              <td class="num">{{ r.villageName ? fmt(r.villagePopulation) : '—' }}</td>
               <td>{{ r.tbUnitName || 'N/A' }}</td>
               <td class="num group-m">{{ fmt(r.testedNaatMonth) }}</td>
               <td class="num group-m">{{ fmt(r.diagnosedMonth) }}</td>
@@ -373,7 +362,7 @@
               <td><span class="medal" [ngClass]="medalClass(r.previousMedal)">{{ r.previousMedal || 'NONE' }}</span></td>
             </tr>
             <tr *ngIf="!(rankings?.tbUnitGpLineList || []).length">
-              <td colspan="21" class="text-muted text-center py-5">No rows for selected filters. Adjust Block/GP and Apply.</td>
+              <td colspan="19" class="text-muted text-center py-5">No rows for selected filters. Adjust Block/GP and Apply.</td>
             </tr>
           </tbody>
         </table>
@@ -467,10 +456,12 @@
       <div class="panel-title-row">
         <div>
           <h2>Block line list</h2>
-          <p class="subhint">Scroll only inside this table · District / Block / GP sticky on the left</p>
+          <p class="subhint">Scroll only inside this table · GP sticky on the left</p>
         </div>
-        <span class="period-chip">{{ monthLabel }} {{ year }}</span>
+        <span class="period-chip">{{ periodRangeLabel }}</span>
       </div>
+
+      <p class="scope-label" *ngIf="blockScopeLabel">{{ blockScopeLabel }}</p>
 
       <div class="legend-row">
         <span class="yn yes">Yes</span> Qualified
@@ -481,15 +472,11 @@
       </div>
 
       <div class="table-responsive wide-table">
-        <table class="table table-hover align-middle data-table sticky-head sticky-cols district-cols">
+        <table class="table table-hover align-middle data-table sticky-head sticky-cols block-cols">
           <thead>
             <tr>
-              <th class="col-freeze">District</th>
-              <th class="col-freeze-2">Block</th>
-              <th class="col-freeze-3">GP</th>
+              <th class="col-freeze">GP</th>
               <th>GP Pop.</th>
-              <th>Village</th>
-              <th>Village Pop.</th>
               <th>TB Unit</th>
               <th class="group-m">NAAT (mo)</th>
               <th class="group-m">Diagnosed (mo)</th>
@@ -511,31 +498,11 @@
             <tr *ngFor="let r of rankings?.tbUnitGpLineList || []">
               <td class="col-freeze">
                 <div class="cell-stack">
-                  <strong>{{ r.districtName || '-' }}</strong>
-                  <small>{{ r.districtCode || '-' }}</small>
-                </div>
-              </td>
-              <td class="col-freeze-2">
-                <div class="cell-stack">
-                  <strong>{{ r.blockName || '-' }}</strong>
-                  <small>{{ r.blockCode || '-' }}</small>
-                </div>
-              </td>
-              <td class="col-freeze-3">
-                <div class="cell-stack">
                   <strong>{{ r.gpName || '-' }}</strong>
                   <small>{{ r.gpCode || '-' }}</small>
                 </div>
               </td>
               <td class="num">{{ fmt(r.gpPopulation) }}</td>
-              <td>
-                <div class="cell-stack" *ngIf="r.villageName">
-                  <strong>{{ r.villageName }}</strong>
-                  <small>{{ r.villageCode || '-' }}</small>
-                </div>
-                <span *ngIf="!r.villageName">—</span>
-              </td>
-              <td class="num">{{ r.villageName ? fmt(r.villagePopulation) : '—' }}</td>
               <td>{{ r.tbUnitName || 'N/A' }}</td>
               <td class="num group-m">{{ fmt(r.testedNaatMonth) }}</td>
               <td class="num group-m">{{ fmt(r.diagnosedMonth) }}</td>
@@ -557,7 +524,7 @@
               <td><span class="medal" [ngClass]="medalClass(r.previousMedal)">{{ r.previousMedal || 'NONE' }}</span></td>
             </tr>
             <tr *ngIf="!(rankings?.tbUnitGpLineList || []).length">
-              <td colspan="21" class="text-muted text-center py-5">No rows for selected filters. Adjust GP and Apply.</td>
+              <td colspan="17" class="text-muted text-center py-5">No rows for selected filters. Adjust GP and Apply.</td>
             </tr>
           </tbody>
         </table>

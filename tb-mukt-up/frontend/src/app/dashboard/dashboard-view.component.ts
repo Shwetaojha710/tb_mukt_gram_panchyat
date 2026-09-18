@@ -35,10 +35,11 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
   chart?: Chart;
 
   loading = false;
-  year = new Date().getFullYear();
+  year = Math.min(2026, Math.max(2023, new Date().getFullYear()));
   reportingMonth = new Date().getMonth() + 1;
-  dateFrom = '';
-  dateTo = '';
+  /** YYYY-MM for <input type="month"> — year + month in one control */
+  dateFrom = this.toMonthInput(this.year, 1);
+  dateTo = this.toMonthInput(this.year, this.reportingMonth);
   location: LocationSelection = {};
   summary: any = null;
   rankings: any = null;
@@ -46,6 +47,8 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
   lockBlock = false;
   hasMonthlyData = false;
   stateName = 'Uttar Pradesh';
+  readonly monthMin = '2023-01';
+  readonly monthMax = '2026-12';
   locMeta: {
     districtCode?: string | null;
     districtName?: string | null;
@@ -59,8 +62,6 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
     villagePopulation?: number | null;
     tbUnitName?: string | null;
   } = {};
-
-  months = MONTH_LABELS.map((name, i) => ({ id: i + 1, name }));
 
   constructor(
     private dashboard: DashboardService,
@@ -79,6 +80,17 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
     this.chart?.destroy();
   }
 
+  private toMonthInput(year: number, month: number): string {
+    return `${year}-${String(month).padStart(2, '0')}`;
+  }
+
+  private parseMonthInput(value: string | null | undefined): { year: number; month: number } | null {
+    if (!value) return null;
+    const m = String(value).match(/^(\d{4})-(\d{1,2})$/);
+    if (!m) return null;
+    return { year: Number(m[1]), month: Number(m[2]) };
+  }
+
   get isState(): boolean {
     return this.level === 'state';
   }
@@ -93,6 +105,35 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
 
   get monthLabel(): string {
     return MONTH_LABELS[(this.reportingMonth || 1) - 1] || String(this.reportingMonth);
+  }
+
+  get periodRangeLabel(): string {
+    const from = this.parseMonthInput(this.dateFrom);
+    const to = this.parseMonthInput(this.dateTo);
+    if (!from || !to) return `${this.monthLabel} ${this.year}`;
+    const fromLabel = `${MONTH_LABELS[from.month - 1]} ${from.year}`;
+    const toLabel = `${MONTH_LABELS[to.month - 1]} ${to.year}`;
+    return fromLabel === toLabel ? toLabel : `${fromLabel} → ${toLabel}`;
+  }
+
+  /** District → Block label for block dashboard table header */
+  get blockScopeLabel(): string {
+    const row = (this.rankings?.tbUnitGpLineList || [])[0];
+    const district =
+      this.locMeta.districtName ||
+      row?.districtName ||
+      (this.auth.currentUser() as any)?.districtName ||
+      '';
+    const block =
+      this.locMeta.blockName ||
+      row?.blockName ||
+      (this.auth.currentUser() as any)?.blockName ||
+      (this.auth.currentUser() as any)?.tehsilName ||
+      '';
+    if (district && block) return `${district} → ${block}`;
+    if (district) return district;
+    if (block) return block;
+    return '';
   }
 
   private applyRoleDefaults() {
@@ -115,12 +156,34 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
     }
   }
 
+  private resetPeriodDefaults() {
+    this.year = Math.min(2026, Math.max(2023, new Date().getFullYear()));
+    this.reportingMonth = new Date().getMonth() + 1;
+    this.dateFrom = this.toMonthInput(this.year, 1);
+    this.dateTo = this.toMonthInput(this.year, this.reportingMonth);
+  }
+
+  resetFilters() {
+    this.resetPeriodDefaults();
+    this.lockDistrict = false;
+    this.lockBlock = false;
+    this.location = {};
+    this.applyRoleDefaults();
+    this.load();
+  }
+
   filters() {
+    const to = this.parseMonthInput(this.dateTo);
+    const from = this.parseMonthInput(this.dateFrom);
+    if (to) {
+      this.year = to.year;
+      this.reportingMonth = to.month;
+    }
     return {
       year: this.year,
       reportingMonth: this.reportingMonth || undefined,
-      dateFrom: this.dateFrom || undefined,
-      dateTo: this.dateTo || undefined,
+      dateFrom: from ? this.toMonthInput(from.year, from.month) : undefined,
+      dateTo: to ? this.toMonthInput(to.year, to.month) : undefined,
       districtId: this.location.districtId || undefined,
       blockId: this.location.blockId || this.location.tehsilId || undefined,
       gpId: this.location.gpId || undefined,
@@ -128,6 +191,17 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
   }
 
   load() {
+    const from = this.parseMonthInput(this.dateFrom);
+    const to = this.parseMonthInput(this.dateTo);
+    if (!from || !to) {
+      this.notify.error('Please select both From and To month/year');
+      return;
+    }
+    if (from.year > to.year || (from.year === to.year && from.month > to.month)) {
+      this.notify.error('From period cannot be after To period');
+      return;
+    }
+
     this.loading = true;
     this.chart?.destroy();
     this.chart = undefined;

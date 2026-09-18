@@ -85,21 +85,37 @@
   min-width: 0;
 }
 
-.f-year {
-  width: 12.75rem;
-}
-
-.f-month {
-  width: 12.5rem;
-}
-
 .f-from,
 .f-to {
-  width: 12.75rem;
+  width: 11.5rem;
 }
 
 .f-location {
   flex: 0 1 auto;
+}
+
+.f-location-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.45rem 0.55rem;
+  flex: 0 1 auto;
+}
+
+.f-location-actions.loc-block .f-location {
+  width: 15.5rem;
+  max-width: 17rem;
+}
+
+.f-location-actions.loc-district .f-location {
+  width: 18rem;
+  max-width: 22rem;
+}
+
+.f-location-actions.loc-state .f-location {
+  flex: 1 1 18rem;
+  min-width: 16rem;
+  max-width: 28rem;
 }
 
 .f-location.loc-block {
@@ -124,7 +140,8 @@
 }
 
 .f-apply {
-  margin-left: auto;
+  margin-left: 0;
+  flex: 0 0 auto;
 }
 
 .f-item .form-label {
@@ -153,6 +170,21 @@
   white-space: nowrap;
 }
 
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.reset-btn {
+  min-height: 32px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.3rem 0.75rem;
+  white-space: nowrap;
+}
+
 .panel-title-row {
   display: flex;
   justify-content: space-between;
@@ -169,6 +201,17 @@
 }
 
 .panel-title-row h2 { margin: 0; font-size: 0.8rem; }
+
+.scope-label {
+  margin: 0 0 0.65rem;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--tb-blue-deep);
+  background: #eef5fb;
+  border: 1px solid var(--tb-line);
+  border-radius: 8px;
+}
 
 .subhint {
   margin: 0.15rem 0 0;
@@ -496,6 +539,9 @@
 .sticky-cols.district-cols .col-freeze-2 { left: 130px; min-width: 130px; }
 .sticky-cols.district-cols .col-freeze-3 { left: 260px; min-width: 140px; }
 
+/* Block table: only GP frozen (District / Block shown above table) */
+.sticky-cols.block-cols .col-freeze { left: 0; min-width: 140px; }
+
 .group-m {
   background: #fbf8f2 !important;
 }
@@ -550,6 +596,8 @@
     margin-left: 0;
   }
 
+  .f-location-actions.loc-state .f-location,
+  .f-location-actions.loc-district .f-location,
   .f-location.loc-state,
   .f-location.loc-district {
     flex: 1 1 100%;
@@ -570,18 +618,25 @@
 }
 
 @media (max-width: 700px) {
+  .f-period,
   .f-year,
   .f-month,
   .f-from,
   .f-to,
   .f-location,
+  .f-location-actions,
   .f-apply {
     width: 100%;
     max-width: none;
     flex: 1 1 100%;
   }
 
-  .f-apply .apply-btn {
+  .f-apply .apply-btn,
+  .f-apply .reset-btn {
+    width: 100%;
+  }
+
+  .filter-actions {
     width: 100%;
   }
 

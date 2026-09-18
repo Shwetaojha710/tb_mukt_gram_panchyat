@@ -58,7 +58,6 @@
             <th>District</th>
             <th>Block</th>
             <th>GP</th>
-            <th>Village</th>
             <th>Tested</th>
             <th>Diagnosed</th>
             <th>Status</th>
@@ -73,7 +72,6 @@
             <td>{{ e.districtName || '-' }}</td>
             <td>{{ e.blockName || '-' }}</td>
             <td>{{ e.gpName || '-' }}</td>
-            <td>{{ e.villageName || '-' }}</td>
             <td>{{ e.testedNaat }}</td>
             <td>{{ e.tbDiagnosed }}</td>
             <td>
@@ -99,7 +97,7 @@
             </td>
           </tr>
           <tr *ngIf="!items.length">
-            <td colspan="11" class="text-center text-muted py-4">No entries found</td>
+            <td colspan="10" class="text-center text-muted py-4">No entries found</td>
           </tr>
         </tbody>
       </table>

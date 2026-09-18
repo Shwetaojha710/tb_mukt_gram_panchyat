@@ -18,6 +18,15 @@ async function rankings(req, res, next) {
   }
 }
 
+async function periods(req, res, next) {
+  try {
+    const data = await dashboardService.getAvailablePeriods(req.user);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function exportExcel(req, res, next) {
   try {
     const buffer = await dashboardService.exportWorkbook(req.user, req.query);
@@ -29,4 +38,4 @@ async function exportExcel(req, res, next) {
   }
 }
 
-module.exports = { summary, rankings, exportExcel };
+module.exports = { summary, rankings, periods, exportExcel };

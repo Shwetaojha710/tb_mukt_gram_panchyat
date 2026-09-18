@@ -54,7 +54,7 @@ const tbEntrySchema = Joi.object({
   tehsilId: Joi.number().integer().allow(null),
   blockId: Joi.number().integer().allow(null),
   gpId: Joi.number().integer().required(),
-  villageId: Joi.number().integer().required(),
+  villageId: Joi.number().integer().allow(null),
   gpPopulation: Joi.number().integer().min(0),
   reportingMonth: Joi.number().integer().min(1).max(12).required(),
   reportingYear: Joi.number().integer().min(2020).max(2100).required(),

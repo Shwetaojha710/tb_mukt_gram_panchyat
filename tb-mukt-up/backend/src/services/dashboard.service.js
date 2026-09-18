@@ -4,6 +4,12 @@ const { AppError } = require('../middleware/errorHandler');
 
 function parseYearMonth(dateText) {
   if (!dateText) return null;
+  const match = String(dateText).match(/^(\d{4})-(\d{1,2})/);
+  if (match) {
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    if (year >= 2000 && month >= 1 && month <= 12) return { year, month };
+  }
   const d = new Date(dateText);
   if (Number.isNaN(d.getTime())) return null;
   return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 };
@@ -62,11 +68,13 @@ function applyScope(user, filters = {}) {
     where.push('e.gp_id = @gpId');
     params.gpId = Number(filters.gpId);
   }
-  if (filters.year) {
+  // When From/To period range is set, skip exact year/month equality (range filter applies instead).
+  const hasPeriodRange = !!(filters.dateFrom || filters.dateTo);
+  if (filters.year && !hasPeriodRange) {
     where.push('e.reporting_year = @year');
     params.year = Number(filters.year);
   }
-  if (filters.reportingMonth) {
+  if (filters.reportingMonth && !hasPeriodRange) {
     where.push('e.reporting_month = @reportingMonth');
     params.reportingMonth = Number(filters.reportingMonth);
   }
@@ -83,6 +91,27 @@ function applyScope(user, filters = {}) {
 
   where.push(`e.status = 'SUBMITTED'`);
   return { whereSql: where.join(' AND '), params };
+}
+
+/** Distinct reporting year/month values that have submitted entries in scope. */
+async function getAvailablePeriods(user) {
+  const { whereSql, params } = applyScope(user, {});
+  const rows = await query(
+    `
+    SELECT DISTINCT e.reporting_year AS year, e.reporting_month AS month
+    FROM dbo.tb_mukt_entries e
+    WHERE ${whereSql}
+    ORDER BY e.reporting_year DESC, e.reporting_month DESC
+    `,
+    params
+  );
+
+  const periods = (rows || []).map((r) => ({
+    year: Number(r.year),
+    month: Number(r.month),
+  }));
+  const years = [...new Set(periods.map((p) => p.year))];
+  return { years, periods };
 }
 
 async function getSummary(user, filters) {
@@ -584,9 +613,6 @@ async function exportWorkbook(user, filters) {
     'GP Code',
     'GP Name',
     'GP Population',
-    'Village Code',
-    'Village Name',
-    'Village Population',
     'TB Unit Name',
     'Presumptive tested NAAT (Reporting month)',
     'TB diagnosed among tested (Reporting month)',
@@ -613,9 +639,6 @@ async function exportWorkbook(user, filters) {
       r.gpCode,
       r.gpName,
       r.gpPopulation,
-      r.villageCode,
-      r.villageName,
-      r.villagePopulation,
       r.tbUnitName,
       r.testedNaatMonth,
       r.diagnosedMonth,
@@ -688,6 +711,7 @@ function assertDashboardAccess(user, level) {
 module.exports = {
   getSummary,
   getRankings,
+  getAvailablePeriods,
   exportWorkbook,
   assertDashboardAccess,
 };
