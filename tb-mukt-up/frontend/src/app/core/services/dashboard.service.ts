@@ -15,6 +15,12 @@ export class DashboardService {
     return this.api.get<{ success: boolean; data: any }>(`/dashboard/rankings?${this.qs(params)}`);
   }
 
+  periods() {
+    return this.api.get<{ success: boolean; data: { years: number[]; periods: { year: number; month: number }[] } }>(
+      `/dashboard/periods`
+    );
+  }
+
   exportExcel(params: Record<string, string | number | undefined>) {
     return this.http.get(`${environment.apiUrl}/dashboard/export?${this.qs(params)}`, {
       responseType: 'blob',

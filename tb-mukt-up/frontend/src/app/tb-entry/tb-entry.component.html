@@ -25,6 +25,7 @@
     <app-location-cascade
       [value]="location"
       [compact]="true"
+      [showVillage]="false"
       [lockDistrict]="lockDistrict"
       [lockBlock]="lockBlock"
       [lockGp]="lockGp"
@@ -100,13 +101,9 @@
           <label class="form-label">GP Population</label>
           <div class="readonly">{{ context['gpPopulation'] || 0 }}</div>
         </div>
-        <div class="col-md-6">
-          <label class="form-label">Village Population</label>
-          <div class="readonly">{{ context['villagePopulation'] || 0 }}</div>
-        </div>
 
         <div class="col-md-6">
-          <label class="form-label">Presumptive tested through NAAT *</label>
+          <label class="form-label">Presumptive tests done through NAAT/ Microscopy *</label>
           <input
             type="number"
             min="0"

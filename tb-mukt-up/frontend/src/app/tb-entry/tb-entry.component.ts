@@ -510,6 +510,7 @@ export class TbEntryComponent implements OnInit {
     const raw = this.form.getRawValue();
     return {
       ...this.location,
+      villageId: null,
       tehsilId: blockId,
       blockId,
       ...raw,
@@ -519,7 +520,7 @@ export class TbEntryComponent implements OnInit {
       poshanEligible: Number(raw.poshanEligible ?? 0),
       poshanReceived: Number(raw.poshanReceived ?? 0),
       gpPopulation: Number(this.context['gpPopulation'] || 0),
-      villagePopulation: Number(this.context['villagePopulation'] || 0),
+      villagePopulation: 0,
       tbUnitId: this.selectedTbUnitId || this.context['tbUnitId'] || null,
       tbUnitName: this.context['tbUnitName'] || null,
       ...(this.entryId ? { entryId: this.entryId } : {}),
@@ -550,10 +551,6 @@ export class TbEntryComponent implements OnInit {
       this.notify.error('District, Block and Gram Panchayat are required');
       return false;
     }
-    if (!this.location.villageId) {
-      this.notify.error('Please select Village');
-      return false;
-    }
     if (this.form.invalid) {
       const firstInvalid = ['testedNaat', 'tbDiagnosed', 'prevYearSuccessTreatment', 'poshanEligible', 'poshanReceived']
         .map((name) => this.fieldError(name))
@@ -575,7 +572,7 @@ export class TbEntryComponent implements OnInit {
       void Swal.fire({
         icon: 'warning',
         title: 'Invalid value',
-        text: 'TB cases diagnosed cannot exceed Presumptive tested through NAAT.',
+        text: 'TB cases diagnosed cannot exceed Presumptive tests done through NAAT/ Microscopy.',
         confirmButtonText: 'OK',
       });
       return false;
