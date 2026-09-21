@@ -65,6 +65,7 @@ const tbEntrySchema = Joi.object({
   previousYearCases: Joi.number().min(0).allow(null),
   treatmentSuccessPct: Joi.number().min(0).max(100).allow(null),
   poshanEligible: Joi.number().integer().min(0).required(),
+  poshanConsented: Joi.number().integer().min(0).required(),
   poshanReceived: Joi.number().integer().min(0).required(),
 }).or('blockId', 'tehsilId');
 

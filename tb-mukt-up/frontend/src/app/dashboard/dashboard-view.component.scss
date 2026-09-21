@@ -71,6 +71,9 @@
   background: #fff;
   border-color: #cfe0ec;
   padding: 0.65rem 0.75rem;
+  overflow: visible;
+  position: relative;
+  z-index: 20;
 }
 
 .filter-bar {
@@ -78,16 +81,20 @@
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 0.45rem 0.55rem;
+  overflow: visible;
+}
+
+.f-from,
+.f-to {
+  width: 12.5rem;
+  position: relative;
+  z-index: 21;
+  overflow: visible;
 }
 
 .f-item {
   flex: 0 0 auto;
   min-width: 0;
-}
-
-.f-from,
-.f-to {
-  width: 11.5rem;
 }
 
 .f-location {
@@ -468,6 +475,57 @@
   white-space: nowrap;
   padding: 0.55rem 0.6rem;
   border-bottom: 1px solid #c5dced;
+}
+
+.data-table thead th.th-stack-col {
+  white-space: normal;
+  vertical-align: bottom;
+  min-width: 9.5rem;
+  max-width: 12rem;
+  padding: 0.5rem 0.55rem;
+}
+
+.th-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.12rem;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.th-stack .th-main {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--tb-blue-deep);
+}
+
+.th-stack .th-period {
+  font-size: 0.72rem;
+  font-weight: 750;
+  color: #0a4f7a;
+  background: #dceef8;
+  border-radius: 4px;
+  padding: 0.08rem 0.28rem;
+}
+
+.th-stack .th-meta {
+  font-size: 0.65rem;
+  font-weight: 550;
+  color: #5a6b7a;
+}
+
+.th-stack .th-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #1f7a4c;
+  margin-top: 0.1rem;
+}
+
+.group-y .th-stack .th-tag {
+  color: #0a4f7a;
 }
 
 .data-table tbody td {

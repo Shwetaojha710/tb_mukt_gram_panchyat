@@ -55,6 +55,7 @@ async function preview(req, res, next) {
       tbDiagnosed: body.tbDiagnosed,
       treatmentSuccessPct: txPct,
       poshanEligible: body.poshanEligible,
+      poshanConsented: body.poshanConsented ?? body.poshanEligible,
       poshanReceived: body.poshanReceived,
     });
     res.json({ success: true, data: { context: ctx, calculations } });

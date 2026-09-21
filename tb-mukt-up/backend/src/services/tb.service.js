@@ -5,7 +5,15 @@ const locationService = require('./location.service');
 const { canAccessLocation } = require('../middleware/auth');
 const settingsService = require('./settings.service');
 function validateNumbers(body) {
-  const fields = ['testedNaat', 'tbDiagnosed', 'prevYearSuccessTreatment', 'poshanEligible', 'poshanReceived', 'gpPopulation'];
+  const fields = [
+    'testedNaat',
+    'tbDiagnosed',
+    'prevYearSuccessTreatment',
+    'poshanEligible',
+    'poshanConsented',
+    'poshanReceived',
+    'gpPopulation',
+  ];
   for (const f of fields) {
     if (body[f] == null) continue;
     if (!Number.isFinite(Number(body[f])) || Number(body[f]) < 0) {
@@ -17,13 +25,16 @@ function validateNumbers(body) {
   }
   if (Number(body.poshanEligible) > Number(body.tbDiagnosed)) {
     throw new AppError(
-      'Eligible / consented to Poshan Potli should not be more than TB cases diagnosed against tested',
+      'Eligible for Poshan Potli cannot be more than TB cases diagnosed against tested',
       400
     );
   }
-  if (Number(body.poshanReceived) > Number(body.poshanEligible)) {
+  if (Number(body.poshanConsented) > Number(body.poshanEligible)) {
+    throw new AppError('Consented cannot be more than Eligible for Poshan Potli', 400);
+  }
+  if (Number(body.poshanReceived) > Number(body.poshanConsented)) {
     throw new AppError(
-      'TB patients received Poshan Potli should not be more than Eligible / consented to Poshan Potli',
+      'TB patients received Poshan Potli cannot be more than Consented',
       400
     );
   }
@@ -72,6 +83,7 @@ async function saveEntry(user, body, status) {
     tbDiagnosed: body.tbDiagnosed,
     treatmentSuccessPct: txPct,
     poshanEligible: body.poshanEligible,
+    poshanConsented: body.poshanConsented,
     poshanReceived: body.poshanReceived,
   });
 
@@ -113,6 +125,7 @@ async function saveEntry(user, body, status) {
     prevYearSuccessTreatment: body.prevYearSuccessTreatment,
     treatmentSuccessPct: calcs.treatmentSuccessPct,
     poshanEligible: body.poshanEligible,
+    poshanConsented: body.poshanConsented,
     poshanReceived: body.poshanReceived,
     testingRate: calcs.testingRate,
     detectionRate: calcs.detectionRate,
@@ -152,7 +165,7 @@ async function saveEntry(user, body, status) {
           tested_naat=@testedNaat, tb_diagnosed=@tbDiagnosed,
           prev_year_success_treatment=@prevYearSuccessTreatment,
           treatment_success_pct=@treatmentSuccessPct,
-          poshan_eligible=@poshanEligible, poshan_received=@poshanReceived,
+          poshan_eligible=@poshanEligible, poshan_consented=@poshanConsented, poshan_received=@poshanReceived,
           testing_rate=@testingRate, detection_rate=@detectionRate, poshan_pct=@poshanPct,
           indicator1=@indicator1, indicator2=@indicator2, indicator3=@indicator3, indicator4=@indicator4,
           is_qualified=@isQualified, overall_target=@overallTarget,
@@ -173,7 +186,7 @@ async function saveEntry(user, body, status) {
         block_id, block_code, block_name, gp_id, gp_code, gp_name, gp_population,
         village_id, village_code, village_name, village_population, tb_unit_id, tb_unit_name,
         reporting_month, reporting_year, tested_naat, tb_diagnosed, prev_year_success_treatment,
-        treatment_success_pct, poshan_eligible, poshan_received, testing_rate, detection_rate,
+        treatment_success_pct, poshan_eligible, poshan_consented, poshan_received, testing_rate, detection_rate,
         poshan_pct, indicator1, indicator2, indicator3, indicator4, is_qualified,
         overall_target, testing_pending, poshan_pending, status, created_by, updated_by
       )
@@ -183,7 +196,7 @@ async function saveEntry(user, body, status) {
         @blockId, @blockCode, @blockName, @gpId, @gpCode, @gpName, @gpPopulation,
         @villageId, @villageCode, @villageName, @villagePopulation, @tbUnitId, @tbUnitName,
         @reportingMonth, @reportingYear, @testedNaat, @tbDiagnosed, @prevYearSuccessTreatment,
-        @treatmentSuccessPct, @poshanEligible, @poshanReceived, @testingRate, @detectionRate,
+        @treatmentSuccessPct, @poshanEligible, @poshanConsented, @poshanReceived, @testingRate, @detectionRate,
         @poshanPct, @indicator1, @indicator2, @indicator3, @indicator4, @isQualified,
         @overallTarget, @testingPending, @poshanPending, @status, @userId, @userId
       )
@@ -274,6 +287,7 @@ function mapEntry(row) {
     prevYearSuccessTreatment: row.prev_year_success_treatment,
     treatmentSuccessPct: row.treatment_success_pct,
     poshanEligible: row.poshan_eligible,
+    poshanConsented: row.poshan_consented ?? row.poshan_eligible,
     poshanReceived: row.poshan_received,
     testingRate: row.testing_rate,
     detectionRate: row.detection_rate,

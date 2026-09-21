@@ -34,6 +34,8 @@ export class LocationCascadeComponent implements OnInit, OnChanges {
   @Input() disabled = false;
   /** Compact single-row filter layout */
   @Input() compact = false;
+  /** Show red * on required labels (hide on dashboard/list filters) */
+  @Input() showRequiredMark = true;
   /** Hide district dropdown (district already locked from login) */
   @Input() hideDistrict = false;
   /** Hide block dropdown (block already locked from login) */
