@@ -1,0 +1,46 @@
+<div class="myp" [class.open]="open">
+  <label class="form-label" *ngIf="label">{{ label }}</label>
+  <button
+    type="button"
+    class="myp-trigger form-control form-control-sm"
+    (click)="toggle($event)"
+    [attr.aria-expanded]="open"
+  >
+    <span class="myp-value">{{ displayLabel }}</span>
+    <span class="myp-icon" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.75"/>
+        <path d="M3 9h18" stroke="currentColor" stroke-width="1.75"/>
+        <path d="M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+      </svg>
+    </span>
+  </button>
+
+  <div class="myp-panel" *ngIf="open" role="dialog" aria-label="Select month and year">
+    <div class="myp-year-nav">
+      <button type="button" class="myp-nav-btn" (click)="prevYear($event)" [disabled]="!canPrevYear" aria-label="Previous year">
+        ‹
+      </button>
+      <strong class="myp-year">{{ viewYear }}</strong>
+      <button type="button" class="myp-nav-btn" (click)="nextYear($event)" [disabled]="!canNextYear" aria-label="Next year">
+        ›
+      </button>
+    </div>
+
+    <div class="myp-months">
+      <button
+        type="button"
+        class="myp-month"
+        *ngFor="let m of months"
+        [class.active]="isSelected(m.id)"
+        (click)="selectMonth(m.id, $event)"
+      >
+        {{ m.name }}
+      </button>
+    </div>
+
+    <div class="myp-footer">
+      <button type="button" class="myp-link" (click)="selectThisMonth($event)">This month</button>
+    </div>
+  </div>
+</div>

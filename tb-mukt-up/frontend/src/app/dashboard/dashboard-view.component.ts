@@ -15,6 +15,7 @@ import { NotifyService } from '../core/services/notify.service';
 import { AuthService } from '../core/services/auth.service';
 import { LocationService } from '../core/services/location.service';
 import { LocationCascadeComponent, LocationSelection } from '../shared/components/location-cascade/location-cascade.component';
+import { MonthYearPickerComponent } from '../shared/components/month-year-picker/month-year-picker.component';
 
 Chart.register(...registerables);
 
@@ -23,7 +24,7 @@ const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'S
 @Component({
   selector: 'app-dashboard-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, LocationCascadeComponent],
+  imports: [CommonModule, FormsModule, LocationCascadeComponent, MonthYearPickerComponent],
   templateUrl: './dashboard-view.component.html',
   styleUrl: './dashboard-view.component.scss',
 })
@@ -37,9 +38,12 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
   loading = false;
   year = Math.min(2026, Math.max(2023, new Date().getFullYear()));
   reportingMonth = new Date().getMonth() + 1;
-  /** YYYY-MM for <input type="month"> — year + month in one control */
-  dateFrom = this.toMonthInput(this.year, 1);
-  dateTo = this.toMonthInput(this.year, this.reportingMonth);
+  fromYear = this.year;
+  fromMonth = 1;
+  toYear = this.year;
+  toMonth = this.reportingMonth;
+  readonly periodMinYear = 2023;
+  readonly periodMaxYear = 2026;
   location: LocationSelection = {};
   summary: any = null;
   rankings: any = null;
@@ -47,8 +51,6 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
   lockBlock = false;
   hasMonthlyData = false;
   stateName = 'Uttar Pradesh';
-  readonly monthMin = '2023-01';
-  readonly monthMax = '2026-12';
   locMeta: {
     districtCode?: string | null;
     districtName?: string | null;
@@ -84,11 +86,12 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
     return `${year}-${String(month).padStart(2, '0')}`;
   }
 
-  private parseMonthInput(value: string | null | undefined): { year: number; month: number } | null {
-    if (!value) return null;
-    const m = String(value).match(/^(\d{4})-(\d{1,2})$/);
-    if (!m) return null;
-    return { year: Number(m[1]), month: Number(m[2]) };
+  get dateFrom(): string {
+    return this.toMonthInput(this.fromYear, this.fromMonth);
+  }
+
+  get dateTo(): string {
+    return this.toMonthInput(this.toYear, this.toMonth);
   }
 
   get isState(): boolean {
@@ -108,12 +111,38 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
   }
 
   get periodRangeLabel(): string {
-    const from = this.parseMonthInput(this.dateFrom);
-    const to = this.parseMonthInput(this.dateTo);
-    if (!from || !to) return `${this.monthLabel} ${this.year}`;
-    const fromLabel = `${MONTH_LABELS[from.month - 1]} ${from.year}`;
-    const toLabel = `${MONTH_LABELS[to.month - 1]} ${to.year}`;
+    const fromLabel = `${MONTH_LABELS[this.fromMonth - 1]} ${this.fromYear}`;
+    const toLabel = `${MONTH_LABELS[this.toMonth - 1]} ${this.toYear}`;
     return fromLabel === toLabel ? toLabel : `${fromLabel} → ${toLabel}`;
+  }
+
+  /** Short period text for table headers, e.g. Jan–Sep 2026 */
+  get selectedPeriodShort(): string {
+    if (this.fromYear === this.toYear && this.fromMonth === this.toMonth) {
+      return `${MONTH_LABELS[this.toMonth - 1]} ${this.toYear}`;
+    }
+    if (this.fromYear === this.toYear) {
+      return `${MONTH_LABELS[this.fromMonth - 1]}–${MONTH_LABELS[this.toMonth - 1]} ${this.toYear}`;
+    }
+    return `${MONTH_LABELS[this.fromMonth - 1]} ${this.fromYear} → ${MONTH_LABELS[this.toMonth - 1]} ${this.toYear}`;
+  }
+
+  /** YTD window: Jan till selected To month/year */
+  get ytdPeriodShort(): string {
+    if (this.toMonth <= 1) return `Jan ${this.toYear}`;
+    return `Jan–${MONTH_LABELS[this.toMonth - 1]} ${this.toYear}`;
+  }
+
+  /** Same months in previous year (for Tx success compare) */
+  get prevYearPeriodShort(): string {
+    const py = this.toYear - 1;
+    if (this.fromYear === this.toYear && this.fromMonth === this.toMonth) {
+      return `${MONTH_LABELS[this.toMonth - 1]} ${py}`;
+    }
+    if (this.fromYear === this.toYear) {
+      return `${MONTH_LABELS[this.fromMonth - 1]}–${MONTH_LABELS[this.toMonth - 1]} ${py}`;
+    }
+    return `${MONTH_LABELS[this.fromMonth - 1]} ${this.fromYear - 1} → ${MONTH_LABELS[this.toMonth - 1]} ${py}`;
   }
 
   /** District → Block label for block dashboard table header */
@@ -159,8 +188,10 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
   private resetPeriodDefaults() {
     this.year = Math.min(2026, Math.max(2023, new Date().getFullYear()));
     this.reportingMonth = new Date().getMonth() + 1;
-    this.dateFrom = this.toMonthInput(this.year, 1);
-    this.dateTo = this.toMonthInput(this.year, this.reportingMonth);
+    this.fromYear = this.year;
+    this.fromMonth = 1;
+    this.toYear = this.year;
+    this.toMonth = this.reportingMonth;
   }
 
   resetFilters() {
@@ -173,17 +204,13 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
   }
 
   filters() {
-    const to = this.parseMonthInput(this.dateTo);
-    const from = this.parseMonthInput(this.dateFrom);
-    if (to) {
-      this.year = to.year;
-      this.reportingMonth = to.month;
-    }
+    this.year = this.toYear;
+    this.reportingMonth = this.toMonth;
     return {
       year: this.year,
       reportingMonth: this.reportingMonth || undefined,
-      dateFrom: from ? this.toMonthInput(from.year, from.month) : undefined,
-      dateTo: to ? this.toMonthInput(to.year, to.month) : undefined,
+      dateFrom: this.dateFrom,
+      dateTo: this.dateTo,
       districtId: this.location.districtId || undefined,
       blockId: this.location.blockId || this.location.tehsilId || undefined,
       gpId: this.location.gpId || undefined,
@@ -191,13 +218,10 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
   }
 
   load() {
-    const from = this.parseMonthInput(this.dateFrom);
-    const to = this.parseMonthInput(this.dateTo);
-    if (!from || !to) {
-      this.notify.error('Please select both From and To month/year');
-      return;
-    }
-    if (from.year > to.year || (from.year === to.year && from.month > to.month)) {
+    if (
+      this.fromYear > this.toYear ||
+      (this.fromYear === this.toYear && this.fromMonth > this.toMonth)
+    ) {
       this.notify.error('From period cannot be after To period');
       return;
     }

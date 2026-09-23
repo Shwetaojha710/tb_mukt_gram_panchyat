@@ -61,6 +61,7 @@ export class TbEntryComponent implements OnInit {
     tbDiagnosed: [null as number | null, [Validators.required, Validators.min(0)]],
     prevYearSuccessTreatment: [null as number | null, [Validators.required, Validators.min(0), Validators.max(100)]],
     poshanEligible: [null as number | null, [Validators.required, Validators.min(0)]],
+    poshanConsented: [null as number | null, [Validators.required, Validators.min(0)]],
     poshanReceived: [null as number | null, [Validators.required, Validators.min(0)]],
   });
 
@@ -69,7 +70,9 @@ export class TbEntryComponent implements OnInit {
   }
 
   /** Soft recommended hint only — never blocks save */
-  digitRecommend(name: 'testedNaat' | 'tbDiagnosed' | 'poshanEligible' | 'poshanReceived'): string | null {
+  digitRecommend(
+    name: 'testedNaat' | 'tbDiagnosed' | 'poshanEligible' | 'poshanConsented' | 'poshanReceived'
+  ): string | null {
     const c = this.form.get(name);
     if (!c || !(c.touched || c.dirty)) return null;
     if (c.value == null) return null;
@@ -77,40 +80,51 @@ export class TbEntryComponent implements OnInit {
     if (Number.isNaN(v)) return null;
     if (name === 'testedNaat' && v > 999) return 'Recommended: maximum 3 digits (999)';
     if (name === 'tbDiagnosed' && v > 99) return 'Recommended: maximum 2 digits (99)';
-    if ((name === 'poshanEligible' || name === 'poshanReceived') && v > 99) {
+    if (
+      (name === 'poshanEligible' || name === 'poshanConsented' || name === 'poshanReceived') &&
+      v > 99
+    ) {
       return 'Recommended: value between 0 and 99 only.';
     }
     return null;
   }
 
-  /** Live relation highlight while filling (same style for both Poshan rules) */
-  poshanRelationHint(field: 'poshanEligible' | 'poshanReceived'): string | null {
+  /** Live relation highlight while filling Poshan fields */
+  poshanRelationHint(field: 'poshanEligible' | 'poshanConsented' | 'poshanReceived'): string | null {
     const eligibleCtrl = this.form.get('poshanEligible');
+    const consentedCtrl = this.form.get('poshanConsented');
     const receivedCtrl = this.form.get('poshanReceived');
     const diagnosedCtrl = this.form.get('tbDiagnosed');
-    if (!eligibleCtrl || !receivedCtrl || !diagnosedCtrl) return null;
+    if (!eligibleCtrl || !consentedCtrl || !receivedCtrl || !diagnosedCtrl) return null;
 
     const eligible = eligibleCtrl.value;
+    const consented = consentedCtrl.value;
     const received = receivedCtrl.value;
     const diagnosed = diagnosedCtrl.value;
+    const touched = (c: typeof eligibleCtrl) => !!(c && (c.touched || c.dirty));
 
     if (field === 'poshanEligible') {
       if (eligible == null || diagnosed == null) return null;
-      if (!(eligibleCtrl.touched || eligibleCtrl.dirty || diagnosedCtrl.touched || diagnosedCtrl.dirty)) {
-        return null;
-      }
+      if (!(touched(eligibleCtrl) || touched(diagnosedCtrl))) return null;
       if (Number(eligible) > Number(diagnosed)) {
-        return 'Eligible / consented to Poshan Potli should not be more than TB cases diagnosed against tested.';
+        return 'Eligible cannot be more than TB cases diagnosed against tested.';
       }
       return null;
     }
 
-    if (received == null || eligible == null) return null;
-    if (!(receivedCtrl.touched || receivedCtrl.dirty || eligibleCtrl.touched || eligibleCtrl.dirty)) {
+    if (field === 'poshanConsented') {
+      if (consented == null || eligible == null) return null;
+      if (!(touched(consentedCtrl) || touched(eligibleCtrl))) return null;
+      if (Number(consented) > Number(eligible)) {
+        return 'Consented cannot be more than Eligible for Poshan Potli.';
+      }
       return null;
     }
-    if (Number(received) > Number(eligible)) {
-      return 'TB patients received Poshan Potli should not be more than Eligible / consented to Poshan Potli.';
+
+    if (received == null || consented == null) return null;
+    if (!(touched(receivedCtrl) || touched(consentedCtrl))) return null;
+    if (Number(received) > Number(consented)) {
+      return 'TB patients received Poshan Potli cannot be more than Consented.';
     }
     return null;
   }
@@ -518,6 +532,7 @@ export class TbEntryComponent implements OnInit {
       tbDiagnosed: Number(raw.tbDiagnosed ?? 0),
       prevYearSuccessTreatment: Number(raw.prevYearSuccessTreatment ?? 0),
       poshanEligible: Number(raw.poshanEligible ?? 0),
+      poshanConsented: Number(raw.poshanConsented ?? 0),
       poshanReceived: Number(raw.poshanReceived ?? 0),
       gpPopulation: Number(this.context['gpPopulation'] || 0),
       villagePopulation: 0,
@@ -552,7 +567,14 @@ export class TbEntryComponent implements OnInit {
       return false;
     }
     if (this.form.invalid) {
-      const firstInvalid = ['testedNaat', 'tbDiagnosed', 'prevYearSuccessTreatment', 'poshanEligible', 'poshanReceived']
+      const firstInvalid = [
+        'testedNaat',
+        'tbDiagnosed',
+        'prevYearSuccessTreatment',
+        'poshanEligible',
+        'poshanConsented',
+        'poshanReceived',
+      ]
         .map((name) => this.fieldError(name))
         .find(Boolean);
       this.notify.error(firstInvalid || 'Please fill all required numeric fields');
@@ -581,16 +603,25 @@ export class TbEntryComponent implements OnInit {
       void Swal.fire({
         icon: 'warning',
         title: 'Invalid value',
-        text: 'Eligible / consented to Poshan Potli should not be more than TB cases diagnosed against tested.',
+        text: 'Eligible for Poshan Potli cannot be more than TB cases diagnosed against tested.',
         confirmButtonText: 'OK',
       });
       return false;
     }
-    if ((v.poshanReceived || 0) > (v.poshanEligible || 0)) {
+    if ((v.poshanConsented || 0) > (v.poshanEligible || 0)) {
       void Swal.fire({
         icon: 'warning',
         title: 'Invalid value',
-        text: 'TB patients received Poshan Potli should not be more than Eligible / consented to Poshan Potli.',
+        text: 'Consented cannot be more than Eligible for Poshan Potli.',
+        confirmButtonText: 'OK',
+      });
+      return false;
+    }
+    if ((v.poshanReceived || 0) > (v.poshanConsented || 0)) {
+      void Swal.fire({
+        icon: 'warning',
+        title: 'Invalid value',
+        text: 'TB patients received Poshan Potli cannot be more than Consented.',
         confirmButtonText: 'OK',
       });
       return false;
@@ -599,8 +630,9 @@ export class TbEntryComponent implements OnInit {
   }
 
   /** Clear poshan field if relation rule fails on blur */
-  onPoshanRelationBlur(field: 'poshanEligible' | 'poshanReceived') {
+  onPoshanRelationBlur(field: 'poshanEligible' | 'poshanConsented' | 'poshanReceived') {
     const eligible = Number(this.form.get('poshanEligible')?.value);
+    const consented = Number(this.form.get('poshanConsented')?.value);
     const received = Number(this.form.get('poshanReceived')?.value);
     const diagnosed = Number(this.form.get('tbDiagnosed')?.value);
 
@@ -610,7 +642,7 @@ export class TbEntryComponent implements OnInit {
         void Swal.fire({
           icon: 'warning',
           title: 'Invalid value',
-          text: 'Eligible / consented to Poshan Potli should not be more than TB cases diagnosed against tested.',
+          text: 'Eligible for Poshan Potli cannot be more than TB cases diagnosed against tested.',
           confirmButtonText: 'OK',
         });
         this.form.get('poshanEligible')?.setValue(null);
@@ -618,12 +650,26 @@ export class TbEntryComponent implements OnInit {
       return;
     }
 
+    if (field === 'poshanConsented') {
+      if (this.form.get('poshanConsented')?.value == null) return;
+      if (!Number.isNaN(consented) && !Number.isNaN(eligible) && consented > eligible) {
+        void Swal.fire({
+          icon: 'warning',
+          title: 'Invalid value',
+          text: 'Consented cannot be more than Eligible for Poshan Potli.',
+          confirmButtonText: 'OK',
+        });
+        this.form.get('poshanConsented')?.setValue(null);
+      }
+      return;
+    }
+
     if (this.form.get('poshanReceived')?.value == null) return;
-    if (!Number.isNaN(received) && !Number.isNaN(eligible) && received > eligible) {
+    if (!Number.isNaN(received) && !Number.isNaN(consented) && received > consented) {
       void Swal.fire({
         icon: 'warning',
         title: 'Invalid value',
-        text: 'TB patients received Poshan Potli should not be more than Eligible / consented to Poshan Potli.',
+        text: 'TB patients received Poshan Potli cannot be more than Consented.',
         confirmButtonText: 'OK',
       });
       this.form.get('poshanReceived')?.setValue(null);
@@ -779,6 +825,7 @@ export class TbEntryComponent implements OnInit {
             tbDiagnosed: e.tbDiagnosed,
             prevYearSuccessTreatment: e.prevYearSuccessTreatment,
             poshanEligible: e.poshanEligible,
+            poshanConsented: e.poshanConsented ?? e.poshanEligible,
             poshanReceived: e.poshanReceived,
           },
           { emitEvent: false }

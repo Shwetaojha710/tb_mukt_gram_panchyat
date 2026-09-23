@@ -20,13 +20,14 @@ export class TbUploadComponent {
     'tb_diagnosed',
     'prev_year_success_treatment',
     'poshan_eligible',
+    'poshan_consented',
     'poshan_received',
   ];
 
   readonly sampleRows = [
-    'district_id,block_id,gp_id,village_id,reporting_month,reporting_year,tested_naat,tb_diagnosed,prev_year_success_treatment,poshan_eligible,poshan_received',
-    '35,416,12001,550001,8,2024,65,14,82,22,18',
-    '35,416,12002,,8,2024,48,2,90,10,9',
+    'district_id,block_id,gp_id,village_id,reporting_month,reporting_year,tested_naat,tb_diagnosed,prev_year_success_treatment,poshan_eligible,poshan_consented,poshan_received',
+    '35,416,12001,550001,8,2024,65,14,82,22,20,18',
+    '35,416,12002,,8,2024,48,2,90,10,9,9',
   ];
 
   downloadTemplateCsv() {

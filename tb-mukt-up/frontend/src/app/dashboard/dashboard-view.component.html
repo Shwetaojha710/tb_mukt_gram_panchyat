@@ -16,24 +16,26 @@
   <div class="panel filters-panel">
     <div class="filter-bar">
       <div class="f-item f-from">
-        <label class="form-label">From</label>
-        <input
-          class="form-control form-control-sm"
-          type="month"
-          [(ngModel)]="dateFrom"
-          [attr.min]="monthMin"
-          [attr.max]="dateTo || monthMax"
-        />
+        <app-month-year-picker
+          label="From"
+          [year]="fromYear"
+          [month]="fromMonth"
+          [minYear]="periodMinYear"
+          [maxYear]="periodMaxYear"
+          (yearChange)="fromYear = $event"
+          (monthChange)="fromMonth = $event"
+        ></app-month-year-picker>
       </div>
       <div class="f-item f-to">
-        <label class="form-label">To</label>
-        <input
-          class="form-control form-control-sm"
-          type="month"
-          [(ngModel)]="dateTo"
-          [attr.min]="dateFrom || monthMin"
-          [attr.max]="monthMax"
-        />
+        <app-month-year-picker
+          label="To"
+          [year]="toYear"
+          [month]="toMonth"
+          [minYear]="periodMinYear"
+          [maxYear]="periodMaxYear"
+          (yearChange)="toYear = $event"
+          (monthChange)="toMonth = $event"
+        ></app-month-year-picker>
       </div>
       <div
         class="f-item f-location-actions"
@@ -47,6 +49,7 @@
             (valueChange)="location = $event"
             [showVillage]="false"
             [compact]="true"
+            [showRequiredMark]="false"
             [hideDistrict]="isDistrict || isBlock || lockDistrict"
             [hideBlock]="isBlock || lockBlock"
             [lockDistrict]="lockDistrict"
@@ -129,14 +132,66 @@
               <th class="col-freeze-4">GP</th>
               <th>GP Pop.</th>
               <th>TB Unit</th>
-              <th class="group-m">NAAT (mo)</th>
-              <th class="group-m">Diagnosed (mo)</th>
-              <th class="group-m">Tx&gt;90% (mo)</th>
-              <th class="group-m">Poshan (mo)</th>
-              <th class="group-y">NAAT (YTD)</th>
-              <th class="group-y">Diagnosed (YTD)</th>
-              <th class="group-y">Tx&gt;90% (YTD)</th>
-              <th class="group-y">Poshan (YTD)</th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">No. of Presumptive TB Tests done in the GPs</span>
+                  <span class="th-period">{{ selectedPeriodShort }}</span>
+                  <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
+                  <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">TB Patients diagnosed in the GPs</span>
+                  <span class="th-period">{{ selectedPeriodShort }}</span>
+                  <span class="th-meta">(Nikshay / TB Register)</span>
+                  <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Previous year successful treatment (%)</span>
+                  <span class="th-period">Same period: {{ prevYearPeriodShort }}</span>
+                  <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Poshan Potli</span>
+                  <span class="th-period">{{ selectedPeriodShort }}</span>
+                  <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">No. of Presumptive TB Tests done in the GPs</span>
+                  <span class="th-period">{{ ytdPeriodShort }}</span>
+                  <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
+                  <span class="th-tag">YTD</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">TB Patients diagnosed in the GPs</span>
+                  <span class="th-period">{{ ytdPeriodShort }}</span>
+                  <span class="th-meta">(Nikshay / TB Register)</span>
+                  <span class="th-tag">YTD</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Previous year successful treatment (%)</span>
+                  <span class="th-period">Same period: {{ prevYearPeriodShort }}</span>
+                  <span class="th-tag">YTD</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Poshan Potli</span>
+                  <span class="th-period">{{ ytdPeriodShort }}</span>
+                  <span class="th-tag">YTD</span>
+                </div>
+              </th>
               <th class="group-y">Test pending</th>
               <th class="group-y">Bucket</th>
               <th class="group-y">Poshan pending</th>
@@ -198,7 +253,7 @@
     <!-- <div class="panel">
       <div class="panel-title-row">
         <h2>Testing pending buckets (GP count)</h2>
-        <span class="hint">Jan till {{ monthLabel }} {{ year }}</span>
+        <span class="hint">{{ ytdPeriodShort }}</span>
       </div>
       <div class="bucket-grid">
         <div class="bucket"><span>1–10</span><strong>{{ fmt(s.kpis.bucket1to10) }}</strong></div>
@@ -304,14 +359,66 @@
               <th class="col-freeze-3">GP</th>
               <th>GP Pop.</th>
               <th>TB Unit</th>
-              <th class="group-m">NAAT (mo)</th>
-              <th class="group-m">Diagnosed (mo)</th>
-              <th class="group-m">Tx&gt;90% (mo)</th>
-              <th class="group-m">Poshan (mo)</th>
-              <th class="group-y">NAAT (YTD)</th>
-              <th class="group-y">Diagnosed (YTD)</th>
-              <th class="group-y">Tx&gt;90% (YTD)</th>
-              <th class="group-y">Poshan (YTD)</th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">No. of Presumptive TB Tests done in the GPs</span>
+                  <span class="th-period">{{ selectedPeriodShort }}</span>
+                  <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
+                  <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">TB Patients diagnosed in the GPs</span>
+                  <span class="th-period">{{ selectedPeriodShort }}</span>
+                  <span class="th-meta">(Nikshay / TB Register)</span>
+                  <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Previous year successful treatment (%)</span>
+                  <span class="th-period">Same period: {{ prevYearPeriodShort }}</span>
+                  <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Poshan Potli</span>
+                  <span class="th-period">{{ selectedPeriodShort }}</span>
+                  <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">No. of Presumptive TB Tests done in the GPs</span>
+                  <span class="th-period">{{ ytdPeriodShort }}</span>
+                  <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
+                  <span class="th-tag">YTD</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">TB Patients diagnosed in the GPs</span>
+                  <span class="th-period">{{ ytdPeriodShort }}</span>
+                  <span class="th-meta">(Nikshay / TB Register)</span>
+                  <span class="th-tag">YTD</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Previous year successful treatment (%)</span>
+                  <span class="th-period">Same period: {{ prevYearPeriodShort }}</span>
+                  <span class="th-tag">YTD</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Poshan Potli</span>
+                  <span class="th-period">{{ ytdPeriodShort }}</span>
+                  <span class="th-tag">YTD</span>
+                </div>
+              </th>
               <th class="group-y">Test pending</th>
               <th class="group-y">Bucket</th>
               <th class="group-y">Poshan pending</th>
@@ -372,7 +479,7 @@
     <!-- <div class="panel">
       <div class="panel-title-row">
         <h2>Testing pending buckets (GP count)</h2>
-        <span class="hint">Jan till {{ monthLabel }} {{ year }}</span>
+        <span class="hint">{{ ytdPeriodShort }}</span>
       </div>
       <div class="bucket-grid">
         <div class="bucket"><span>1–10</span><strong>{{ fmt(s.kpis.bucket1to10) }}</strong></div>
@@ -478,14 +585,66 @@
               <th class="col-freeze">GP</th>
               <th>GP Pop.</th>
               <th>TB Unit</th>
-              <th class="group-m">NAAT (mo)</th>
-              <th class="group-m">Diagnosed (mo)</th>
-              <th class="group-m">Tx&gt;90% (mo)</th>
-              <th class="group-m">Poshan (mo)</th>
-              <th class="group-y">NAAT (YTD)</th>
-              <th class="group-y">Diagnosed (YTD)</th>
-              <th class="group-y">Tx&gt;90% (YTD)</th>
-              <th class="group-y">Poshan (YTD)</th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">No. of Presumptive TB Tests done in the GPs</span>
+                  <span class="th-period">{{ selectedPeriodShort }}</span>
+                  <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
+                  <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">TB Patients diagnosed in the GPs</span>
+                  <span class="th-period">{{ selectedPeriodShort }}</span>
+                  <span class="th-meta">(Nikshay / TB Register)</span>
+                  <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Previous year successful treatment (%)</span>
+                  <span class="th-period">Same period: {{ prevYearPeriodShort }}</span>
+                  <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Poshan Potli</span>
+                  <span class="th-period">{{ selectedPeriodShort }}</span>
+                  <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">No. of Presumptive TB Tests done in the GPs</span>
+                  <span class="th-period">{{ ytdPeriodShort }}</span>
+                  <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
+                  <span class="th-tag">YTD</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">TB Patients diagnosed in the GPs</span>
+                  <span class="th-period">{{ ytdPeriodShort }}</span>
+                  <span class="th-meta">(Nikshay / TB Register)</span>
+                  <span class="th-tag">YTD</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Previous year successful treatment (%)</span>
+                  <span class="th-period">Same period: {{ prevYearPeriodShort }}</span>
+                  <span class="th-tag">YTD</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Poshan Potli</span>
+                  <span class="th-period">{{ ytdPeriodShort }}</span>
+                  <span class="th-tag">YTD</span>
+                </div>
+              </th>
               <th class="group-y">Test pending</th>
               <th class="group-y">Bucket</th>
               <th class="group-y">Poshan pending</th>
@@ -534,7 +693,7 @@
     <!-- <div class="panel">
       <div class="panel-title-row">
         <h2>Testing pending buckets (GP count)</h2>
-        <span class="hint">Jan till {{ monthLabel }} {{ year }}</span>
+        <span class="hint">{{ ytdPeriodShort }}</span>
       </div>
       <div class="bucket-grid">
         <div class="bucket"><span>1–10</span><strong>{{ fmt(s.kpis.bucket1to10) }}</strong></div>

@@ -103,7 +103,7 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Presumptive tests done through NAAT/ Microscopy *</label>
+          <label class="form-label">No. of Presumptive TB Tests done in the GPs in  Month (as per Lab Register and NAAT Register)</label>
           <input
             type="number"
             min="0"
@@ -121,7 +121,7 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">TB cases diagnosed against tested *</label>
+          <label class="form-label">Number of TB Patient diagnosed in the GPs  in Month</label>
           <input
             type="number"
             min="0"
@@ -139,7 +139,7 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Previous year successful treatment (%) *</label>
+          <label class="form-label">Previous year successful treatment (%)  Same Time Period</label>
           <input
             type="number"
             min="0"
@@ -157,13 +157,13 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Eligible / consented to Poshan Potli *</label>
+          <label class="form-label">Eligible for Poshan Potli *</label>
           <input
             type="number"
             min="0"
             class="form-control"
             formControlName="poshanEligible"
-            placeholder="Enter value"
+            placeholder="Enter eligible count"
             (blur)="onPoshanRelationBlur('poshanEligible')"
             [class.is-invalid]="isInvalid('poshanEligible') || !!poshanRelationHint('poshanEligible')"
           />
@@ -179,13 +179,35 @@
         </div>
 
         <div class="col-md-6">
+          <label class="form-label">Consented to Poshan Potli *</label>
+          <input
+            type="number"
+            min="0"
+            class="form-control"
+            formControlName="poshanConsented"
+            placeholder="Enter consented count"
+            (blur)="onPoshanRelationBlur('poshanConsented')"
+            [class.is-invalid]="isInvalid('poshanConsented') || !!poshanRelationHint('poshanConsented')"
+          />
+          <div class="invalid-feedback d-block" *ngIf="isInvalid('poshanConsented')">
+            {{ fieldError('poshanConsented') }}
+          </div>
+          <div class="field-recommend" *ngIf="poshanRelationHint('poshanConsented')">
+            {{ poshanRelationHint('poshanConsented') }}
+          </div>
+          <div class="field-recommend" *ngIf="!poshanRelationHint('poshanConsented') && digitRecommend('poshanConsented')">
+            {{ digitRecommend('poshanConsented') }}
+          </div>
+        </div>
+
+        <div class="col-md-6">
           <label class="form-label">TB patients received Poshan Potli *</label>
           <input
             type="number"
             min="0"
             class="form-control"
             formControlName="poshanReceived"
-            placeholder="Enter value"
+            placeholder="Enter received count"
             (blur)="onPoshanRelationBlur('poshanReceived')"
             [class.is-invalid]="isInvalid('poshanReceived') || !!poshanRelationHint('poshanReceived')"
           />

@@ -12,21 +12,22 @@ function computeIndicators(input) {
   const notified = Number(input.tbDiagnosed) || 0;
   const treatmentSuccessPct = Number(input.treatmentSuccessPct);
   const eligible = Number(input.poshanEligible) || 0;
+  const consented = Number(input.poshanConsented ?? input.poshanEligible) || 0;
   const received = Number(input.poshanReceived) || 0;
 
   const testingRate = gpPopulation > 0 ? (tested * 1000) / gpPopulation : 0;
   const detectionRate = gpPopulation > 0 ? (notified * 1000) / gpPopulation : 0;
-  const poshanPct = eligible > 0 ? (received / eligible) * 100 : 0;
+  const poshanPct = consented > 0 ? (received / consented) * 100 : 0;
 
   const indicator1 = testingRate >= 30;
   const indicator2 = detectionRate <= 1;
   const indicator3 = !Number.isNaN(treatmentSuccessPct) && treatmentSuccessPct > 90;
-  const indicator4 = eligible > 0 && Math.abs(poshanPct - 100) < 0.0001;
+  const indicator4 = consented > 0 && Math.abs(poshanPct - 100) < 0.0001;
   const qualified = indicator1 && indicator2 && indicator3 && indicator4;
 
   const overallTarget = gpPopulation > 0 ? (gpPopulation * 30) / 1000 : 0;
   const testingPending = Math.max(0, overallTarget - tested);
-  const poshanPending = Math.max(0, eligible - received);
+  const poshanPending = Math.max(0, consented - received);
 
   return {
     testingRate: round(testingRate, 4),

@@ -4,7 +4,10 @@
   [class.compact]="compact"
 >
   <div [class]="compact ? 'col' : 'col-md-6'" *ngIf="!hideDistrict">
-    <label class="form-label">District <span class="text-danger">*</span></label>
+    <label class="form-label">
+      District
+      <span class="text-danger" *ngIf="showRequiredMark">*</span>
+    </label>
     <select
       class="form-select"
       [class.form-select-sm]="compact"
@@ -20,7 +23,10 @@
   </div>
 
   <div [class]="compact ? 'col' : 'col-md-6'" *ngIf="!hideBlock">
-    <label class="form-label">Block <span class="text-danger">*</span></label>
+    <label class="form-label">
+      Block
+      <span class="text-danger" *ngIf="showRequiredMark">*</span>
+    </label>
     <select
       class="form-select"
       [class.form-select-sm]="compact"
@@ -36,7 +42,10 @@
   </div>
 
   <div [class]="compact ? 'col' : (hideDistrict && hideBlock ? 'col-md-12' : 'col-md-6')">
-    <label class="form-label">GP <span class="text-danger">*</span></label>
+    <label class="form-label">
+      GP
+      <span class="text-danger" *ngIf="showRequiredMark">*</span>
+    </label>
     <select
       class="form-select"
       [class.form-select-sm]="compact"
@@ -52,7 +61,10 @@
   </div>
 
   <div [class]="compact ? 'col' : 'col-md-6'" *ngIf="showVillage">
-    <label class="form-label">Village <span class="text-danger">*</span></label>
+    <label class="form-label">
+      Village
+      <span class="text-danger" *ngIf="showRequiredMark">*</span>
+    </label>
     <select
       class="form-select"
       [class.form-select-sm]="compact"
