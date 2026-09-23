@@ -74,6 +74,7 @@ BEGIN
     prev_year_success_treatment INT NOT NULL CONSTRAINT DF_tb_mukt_tx DEFAULT (0),
     treatment_success_pct DECIMAL(6,2) NULL,
     poshan_eligible INT NOT NULL CONSTRAINT DF_tb_mukt_posh_e DEFAULT (0),
+    poshan_consented INT NOT NULL CONSTRAINT DF_tb_mukt_posh_c DEFAULT (0),
     poshan_received INT NOT NULL CONSTRAINT DF_tb_mukt_posh_r DEFAULT (0),
     testing_rate DECIMAL(12,4) NULL,
     detection_rate DECIMAL(12,4) NULL,
