@@ -2,6 +2,29 @@
   display: grid;
   gap: 1rem;
   animation: fade-up 0.35s ease both;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.page,
+.page .form-label,
+.page .form-control,
+.page .form-select,
+.page .btn,
+.page .chip,
+.page .readonly,
+.page .field-hint,
+.page .field-recommend,
+.page .panel-head h2,
+.page-head h1,
+.page-head .eyebrow,
+.page-head .lead {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+:host ::ng-deep .location-cascade,
+:host ::ng-deep .location-cascade .form-label,
+:host ::ng-deep .location-cascade .form-select {
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .page-head {

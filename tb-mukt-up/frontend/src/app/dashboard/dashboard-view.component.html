@@ -8,7 +8,7 @@
       <p class="lead" *ngIf="isBlock">Block overview · GP filter + line list</p> -->
     </div>
     <button class="btn btn-export" type="button" (click)="exportExcel()" [disabled]="loading">
-      Export Table (Excel)
+      Download Data (Excel)
     </button>
   </div>
 
@@ -99,19 +99,22 @@
         <span>Pending above 50</span>
         <strong>{{ fmt(s.kpis.bucketAbove50) }}</strong>
       </div>
-      <div class="stat-card">
-        <span>Districts · Gold / Silver / Bronze</span>
-        <strong>{{ fmt(s.kpis.districtsWithGold) }} / {{ fmt(s.kpis.districtsWithSilver) }} / {{ fmt(s.kpis.districtsWithBronze) }}</strong>
-      </div>
     </div>
 
     <div class="panel">
       <div class="panel-title-row">
         <div>
-          <h2>State line list</h2>
+          <h2>State line list ->
+            <span >{{stateName}}</span>
+          </h2>
           <p class="subhint">Scroll only inside this table · District / Block / GP stay sticky on the left</p>
         </div>
-        <span class="period-chip">{{ periodRangeLabel }}</span>
+        <div class="panel-title-actions">
+          <span class="period-chip">{{ periodRangeLabel }}</span>
+          <button class="btn btn-export btn-sm" type="button" (click)="exportExcel()" [disabled]="loading">
+            Export table
+          </button>
+        </div>
       </div>
 
       <div class="legend-row">
@@ -123,10 +126,10 @@
       </div>
 
       <div class="table-responsive wide-table">
-        <table class="table table-hover align-middle data-table sticky-head sticky-cols">
+        <table class="table table-hover align-middle data-table sticky-head sticky-cols state-cols">
           <thead>
             <tr>
-              <th class="col-freeze">State</th>
+              <!-- <th class="col-freeze">State</th> -->
               <th class="col-freeze-2">District</th>
               <th class="col-freeze-3">Block</th>
               <th class="col-freeze-4">GP</th>
@@ -144,7 +147,7 @@
                 <div class="th-stack">
                   <span class="th-main">TB Patients diagnosed in the GPs</span>
                   <span class="th-period">{{ selectedPeriodShort }}</span>
-                  <span class="th-meta">(Nikshay / TB Register)</span>
+                  <span class="th-meta">(Nikshay / TB Notification Register)</span>
                   <span class="th-tag">Month</span>
                 </div>
               </th>
@@ -174,7 +177,7 @@
                 <div class="th-stack">
                   <span class="th-main">TB Patients diagnosed in the GPs</span>
                   <span class="th-period">{{ ytdPeriodShort }}</span>
-                  <span class="th-meta">(Nikshay / TB Register)</span>
+                  <span class="th-meta">(Nikshay / TB Notification Register)</span>
                   <span class="th-tag">YTD</span>
                 </div>
               </th>
@@ -202,7 +205,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let r of rankings?.tbUnitGpLineList || []">
-              <td class="col-freeze">{{ r.stateName || stateName }}</td>
+              <!-- <td class="col-freeze">{{ r.stateName || stateName }}</td> -->
               <td class="col-freeze-2">
                 <div class="cell-stack">
                   <strong>{{ r.districtName || '-' }}</strong>
@@ -327,19 +330,24 @@
         <span>Pending above 50</span>
         <strong>{{ fmt(s.kpis.bucketAbove50) }}</strong>
       </div>
-      <div class="stat-card">
-        <span>Blocks · Gold / Silver / Bronze</span>
-        <strong>{{ fmt(s.kpis.blocksWithGold) }} / {{ fmt(s.kpis.blocksWithSilver) }} / {{ fmt(s.kpis.blocksWithBronze) }}</strong>
-      </div>
     </div>
 
     <div class="panel">
       <div class="panel-title-row">
         <div>
-          <h2>District line list</h2>
+          <h2>District line list ->
+            <span>
+          {{ rankings?.tbUnitGpLineList?.[0]?.districtName || 'District' }}
+        </span>
+          </h2>
           <p class="subhint">Scroll only inside this table · Block / GP stay sticky on the left</p>
         </div>
-        <span class="period-chip">{{ periodRangeLabel }}</span>
+        <div class="panel-title-actions">
+          <span class="period-chip">{{ periodRangeLabel }}</span>
+          <button class="btn btn-export btn-sm" type="button" (click)="exportExcel()" [disabled]="loading">
+            Export table
+          </button>
+        </div>
       </div>
 
       <div class="legend-row">
@@ -354,7 +362,8 @@
         <table class="table table-hover align-middle data-table sticky-head sticky-cols district-cols">
           <thead>
             <tr>
-              <th class="col-freeze">District</th>
+
+              <!-- <th class="col-freeze">District</th> -->
               <th class="col-freeze-2">Block</th>
               <th class="col-freeze-3">GP</th>
               <th>GP Pop.</th>
@@ -371,7 +380,7 @@
                 <div class="th-stack">
                   <span class="th-main">TB Patients diagnosed in the GPs</span>
                   <span class="th-period">{{ selectedPeriodShort }}</span>
-                  <span class="th-meta">(Nikshay / TB Register)</span>
+                  <span class="th-meta">(Nikshay / TB Notification Register)</span>
                   <span class="th-tag">Month</span>
                 </div>
               </th>
@@ -401,7 +410,7 @@
                 <div class="th-stack">
                   <span class="th-main">TB Patients diagnosed in the GPs</span>
                   <span class="th-period">{{ ytdPeriodShort }}</span>
-                  <span class="th-meta">(Nikshay / TB Register)</span>
+                  <span class="th-meta">(Nikshay / TB Notification Register)</span>
                   <span class="th-tag">YTD</span>
                 </div>
               </th>
@@ -429,12 +438,12 @@
           </thead>
           <tbody>
             <tr *ngFor="let r of rankings?.tbUnitGpLineList || []">
-              <td class="col-freeze">
+              <!-- <td class="col-freeze">
                 <div class="cell-stack">
                   <strong>{{ r.districtName || '-' }}</strong>
                   <small>{{ r.districtCode || '-' }}</small>
                 </div>
-              </td>
+              </td> -->
               <td class="col-freeze-2">
                 <div class="cell-stack">
                   <strong>{{ r.blockName || '-' }}</strong>
@@ -553,10 +562,6 @@
         <span>Pending above 50</span>
         <strong>{{ fmt(s.kpis.bucketAbove50) }}</strong>
       </div>
-      <div class="stat-card">
-        <span>GP performance · Bronze / Silver / Gold</span>
-        <strong>{{ fmt(s.kpis.bronzeGps) }} / {{ fmt(s.kpis.silverGps) }} / {{ fmt(s.kpis.goldGps) }}</strong>
-      </div>
     </div>
 
     <div class="panel">
@@ -565,7 +570,12 @@
           <h2>Block line list</h2>
           <p class="subhint">Scroll only inside this table · GP sticky on the left</p>
         </div>
-        <span class="period-chip">{{ periodRangeLabel }}</span>
+        <div class="panel-title-actions">
+          <span class="period-chip">{{ periodRangeLabel }}</span>
+          <button class="btn btn-export btn-sm" type="button" (click)="exportExcel()" [disabled]="loading">
+            Export table
+          </button>
+        </div>
       </div>
 
       <p class="scope-label" *ngIf="blockScopeLabel">{{ blockScopeLabel }}</p>
@@ -597,7 +607,7 @@
                 <div class="th-stack">
                   <span class="th-main">TB Patients diagnosed in the GPs</span>
                   <span class="th-period">{{ selectedPeriodShort }}</span>
-                  <span class="th-meta">(Nikshay / TB Register)</span>
+                  <span class="th-meta">(Nikshay / TB Notification Register)</span>
                   <span class="th-tag">Month</span>
                 </div>
               </th>
@@ -627,7 +637,7 @@
                 <div class="th-stack">
                   <span class="th-main">TB Patients diagnosed in the GPs</span>
                   <span class="th-period">{{ ytdPeriodShort }}</span>
-                  <span class="th-meta">(Nikshay / TB Register)</span>
+                  <span class="th-meta">(Nikshay / TB Notification Register)</span>
                   <span class="th-tag">YTD</span>
                 </div>
               </th>

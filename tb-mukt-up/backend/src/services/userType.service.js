@@ -9,7 +9,13 @@ function mapUserTypeToRole(userTypeName = '') {
   if (n.includes('division')) return 'DIVISION';
   if (n.includes('tehsil')) return 'TEHSIL';
   if (n.includes('district') || n.includes('cmo')) return 'DISTRICT';
-  if (n.includes('block') || n.includes('facility') || n.includes('hwc') || n.includes('subtype')) {
+  if (
+    n.includes('block') ||
+    n.includes('facility') ||
+    n.includes('tbunit') ||
+    n.includes('hwc') ||
+    n.includes('subtype')
+  ) {
     return 'BLOCK';
   }
   if (n.includes('village') || n.includes('gram')) return 'VILLAGE';

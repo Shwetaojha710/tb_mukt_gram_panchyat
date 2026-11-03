@@ -590,15 +590,15 @@ export class TbEntryComponent implements OnInit {
       });
       return false;
     }
-    if ((v.tbDiagnosed || 0) > (v.testedNaat || 0)) {
-      void Swal.fire({
-        icon: 'warning',
-        title: 'Invalid value',
-        text: 'TB cases diagnosed cannot exceed Presumptive tests done through NAAT/ Microscopy.',
-        confirmButtonText: 'OK',
-      });
-      return false;
-    }
+    // if ((v.tbDiagnosed || 0) > (v.testedNaat || 0)) {
+    //   void Swal.fire({
+    //     icon: 'warning',
+    //     title: 'Invalid value',
+    //     text: 'TB cases diagnosed cannot exceed Presumptive tests done through NAAT/ Microscopy.',
+    //     confirmButtonText: 'OK',
+    //   });
+    //   return false;
+    // }
     if ((v.poshanEligible || 0) > (v.tbDiagnosed || 0)) {
       void Swal.fire({
         icon: 'warning',
@@ -753,30 +753,6 @@ export class TbEntryComponent implements OnInit {
 
         if (!e) {
           this.notify.error('Entry not found');
-          this.router.navigate(['/tb-entries']);
-          return;
-        }
-
-        // Deadline check
-        const day =
-          e.status === 'SUBMITTED'
-            ? Number(this.entrySettings?.editDeadlineDay) || 15
-            : Number(this.entrySettings?.submitDeadlineDay) || 10;
-
-        let nm = Number(e.reportingMonth) + 1;
-        let ny = Number(e.reportingYear);
-        if (nm > 12) {
-          nm = 1;
-          ny += 1;
-        }
-
-        const deadline = new Date(ny, nm - 1, day, 23, 59, 59, 999);
-        if (new Date() > deadline) {
-          this.notify.error(
-            e.status === 'SUBMITTED'
-              ? `Edit closed for this month (till ${deadline.toLocaleDateString('en-IN')})`
-              : `Submit/edit closed (till ${deadline.toLocaleDateString('en-IN')})`
-          );
           this.router.navigate(['/tb-entries']);
           return;
         }

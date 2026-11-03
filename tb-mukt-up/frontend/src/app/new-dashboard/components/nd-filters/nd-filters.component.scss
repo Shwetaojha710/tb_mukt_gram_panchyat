@@ -1,0 +1,72 @@
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.45rem 0.55rem;
+}
+
+.f-item {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.f-period {
+  width: 12.5rem;
+}
+
+.f-select {
+  width: 13rem;
+}
+
+.f-item .form-label {
+  font-size: 0.8rem;
+  margin-bottom: 0.12rem;
+  font-weight: 600;
+  color: var(--tb-muted);
+}
+
+.f-item .form-select {
+  min-height: 32px;
+  font-size: 0.8rem;
+  border-radius: 8px;
+}
+
+.f-item .form-select:disabled {
+  background-color: #eef3f7;
+  cursor: not-allowed;
+}
+
+.f-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.f-actions .btn {
+  border-radius: 8px;
+  white-space: nowrap;
+  min-width: 5rem;
+}
+
+.filter-error {
+  margin: 0.45rem 0 0;
+  color: #b71c1c;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  .f-period,
+  .f-select,
+  .f-actions {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .f-actions .btn {
+    flex: 1;
+  }
+
+  .f-item .form-select {
+    min-height: 44px;
+    font-size: 16px; /* avoids mobile browser zoom on focus */
+  }
+}

@@ -1,0 +1,30 @@
+:host {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.action-panel {
+  background: var(--tb-surface);
+  border: 1px solid var(--tb-line);
+  border-top: 3px solid var(--tb-saffron);
+  border-radius: 14px;
+  padding: 0.85rem 0.95rem 0.95rem;
+  box-shadow: 0 6px 18px rgba(7, 54, 82, 0.04);
+  min-width: 0;
+}
+
+.action-head {
+  margin-bottom: 0.55rem;
+}
+
+.action-head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--tb-blue-deep);
+}
+
+.action-head p {
+  margin: 0.15rem 0 0;
+  color: var(--tb-muted);
+}

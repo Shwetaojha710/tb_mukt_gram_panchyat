@@ -1,0 +1,25 @@
+<section class="action-panel" *ngFor="let list of visible; let i = index">
+  <div class="action-head">
+    <h2><ng-container *ngIf="numbered">{{ i + 1 }}. </ng-container>{{ list.title }}</h2>
+    <p>{{ list.hint }}</p>
+  </div>
+  <app-nd-data-table
+    [serverSide]="true"
+    [columns]="list.columns"
+    [rows]="list.rows"
+    [total]="list.total"
+    [loading]="list.loading"
+    [error]="list.error"
+    [emptyText]="list.emptyText"
+    [pageSize]="list.query.pageSize"
+    [sortBy]="list.query.sortBy"
+    [sortDir]="list.query.sortDir"
+    [resetKey]="list.resetKey"
+    [exportName]="'tb-mukt-' + list.type"
+    [exporting]="list.exporting"
+    searchPlaceholder="Search GP, block or district…"
+    (queryChange)="onQuery(list, $event)"
+    (retry)="list.load$.next()"
+    (exportRequest)="exportList(list)"
+  ></app-nd-data-table>
+</section>

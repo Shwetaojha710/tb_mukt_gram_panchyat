@@ -201,6 +201,19 @@
   flex-wrap: wrap;
 }
 
+.panel-title-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-export.btn-sm {
+  min-height: 2rem;
+  padding-inline: 0.7rem;
+  font-size: 0.75rem;
+}
+
 .panel h2 {
   margin: 0 0 0.5rem;
   font-size: 0.8rem;
@@ -594,9 +607,26 @@
 
 /* District table: 3 frozen columns (District / Block / GP) */
 .sticky-cols.district-cols .col-freeze { left: 0; min-width: 130px; }
-.sticky-cols.district-cols .col-freeze-2 { left: 130px; min-width: 130px; }
-.sticky-cols.district-cols .col-freeze-3 { left: 260px; min-width: 140px; }
+// .sticky-cols.district-cols .col-freeze-2 { left: 130px; min-width: 130px; }
+.sticky-cols.district-cols .col-freeze-2 { left: 0; min-width: 130px; }
+// .sticky-cols.district-cols .col-freeze-3 { left: 260px; min-width: 140px; }
+.sticky-cols.district-cols .col-freeze-3 {   left: 130px;
+  min-width: 140px; }
+/* State table: State column removed, only District / Block / GP frozen */
+.sticky-cols.state-cols .col-freeze-2 {
+  left: 0;
+  min-width: 130px;
+}
 
+.sticky-cols.state-cols .col-freeze-3 {
+  left: 130px;
+  min-width: 130px;
+}
+
+.sticky-cols.state-cols .col-freeze-4 {
+  left: 260px;
+  min-width: 140px;
+}
 /* Block table: only GP frozen (District / Block shown above table) */
 .sticky-cols.block-cols .col-freeze { left: 0; min-width: 140px; }
 
@@ -707,8 +737,9 @@
     left: auto;
     box-shadow: none;
   }
-
   .kpi-grid.three {
     grid-template-columns: 1fr;
   }
 }
+
+

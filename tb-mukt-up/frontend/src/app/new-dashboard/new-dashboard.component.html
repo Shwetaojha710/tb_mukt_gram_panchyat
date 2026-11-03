@@ -1,0 +1,208 @@
+<div class="nd-page">
+  <div class="nd-head">
+    <div>
+      <p class="eyebrow">Dashboard Overview</p>
+      <h1>{{ pageTitle }}<span *ngIf="scopeLabel"> — {{ scopeLabel }}</span></h1>
+    </div>
+    <div class="nd-head-actions">
+      <span class="period-chip">{{ periodLabel }}</span>
+      <button
+        class="btn btn-export"
+        type="button"
+        (click)="exportExcel()"
+        [disabled]="exporting || loading || (!!prompt && view === 'overview')"
+      >
+        {{ exporting ? 'Preparing Excel…' : 'Download Data (Excel)' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="nd-tabs" role="tablist" aria-label="Dashboard views">
+    <button
+      *ngFor="let v of views"
+      type="button"
+      role="tab"
+      class="nd-tab"
+      [class.active]="v === view"
+      [attr.aria-selected]="v === view"
+      (click)="setView(v)"
+    >
+      {{ tabLabels[v] }}
+    </button>
+  </div>
+
+  <div class="panel filters-panel">
+    <app-nd-filters
+      [view]="view"
+      [value]="filters"
+      [lockDistrict]="lockDistrict"
+      [lockBlock]="lockBlock"
+      [loading]="loading"
+      (apply)="onApply($event)"
+      (reset)="onReset()"
+    ></app-nd-filters>
+  </div>
+
+  <!-- ===================== Action items ===================== -->
+  <app-nd-action-items
+    *ngIf="view === 'actions'"
+    [filters]="filters"
+    [showDistrict]="!lockDistrict"
+  ></app-nd-action-items>
+
+  <ng-container *ngIf="view === 'overview'">
+    <div class="state-box" *ngIf="prompt">
+      <strong>Nothing selected yet</strong>
+      <p>{{ prompt }}</p>
+    </div>
+
+    <div class="state-box" *ngIf="loading" role="status">
+      <div class="spinner-border text-primary" aria-hidden="true"></div>
+      <p>Loading dashboard…</p>
+    </div>
+
+    <div class="state-box error" *ngIf="!loading && error as e" role="alert">
+      <strong>{{
+        e.kind === 'unauthorized'
+          ? 'Session expired'
+          : e.kind === 'forbidden'
+            ? 'Access denied'
+            : e.kind === 'network'
+              ? 'Connection problem'
+              : 'Could not load the dashboard'
+      }}</strong>
+      <p>{{ e.message }}</p>
+      <button *ngIf="e.kind === 'unauthorized'" class="btn btn-primary btn-sm" type="button" (click)="logout()">
+        Log in again
+      </button>
+      <button
+        *ngIf="e.kind === 'network' || e.kind === 'server'"
+        class="btn btn-primary btn-sm"
+        type="button"
+        (click)="load()"
+      >
+        Retry
+      </button>
+    </div>
+
+    <ng-container *ngIf="!loading && !error && !prompt && summary as s">
+      <p class="info-banner" *ngIf="noEntries">
+        No submitted TB entries for {{ periodLabel }} in this view. Totals come from the location master; the
+        remaining figures will fill in once entries are submitted.
+      </p>
+
+      <app-nd-kpi-cards *ngFor="let row of kpiRows" [cards]="row"></app-nd-kpi-cards>
+      <div class="panel notes">
+        <ul>
+          <li><strong>Eligible</strong> = at most 1 TB case per 1,000 population in the selected period.</li>
+          <li>
+            <strong>Qualified</strong> = Eligible <em>and</em> at least 30 presumptive tests per 1,000 population
+            completed till date.
+          </li>
+          <li *ngIf="level !== 'block'">
+            Click a {{ childLabel }} in the table below to open its overview (filters update automatically).
+          </li>
+          <li *ngIf="level === 'state'">
+            Tip: choose a District (and optionally Block) in the filters to drill down without changing tabs.
+          </li>
+        </ul>
+      </div>
+      <div class="chart-grid" [class.two]="!qualifiedChart">
+        <div class="panel" *ngIf="qualifiedChart as c">
+          <h2>Qualified GPs by {{ childLabel }}</h2>
+          <p class="subhint">{{ childTitle }}s with submitted entries · top {{ c.labels.length }}</p>
+          <app-nd-chart
+            [labels]="c.labels"
+            [values]="c.values"
+            [notes]="c.notes"
+            [height]="c.height"
+            [horizontal]="true"
+            colors="#1f7a4c"
+            seriesLabel="Qualified GPs"
+            [ariaLabel]="'Qualified GPs by ' + childLabel"
+            emptyText="No GP has qualified yet in this view"
+          ></app-nd-chart>
+        </div>
+
+        <div class="panel" *ngIf="bucketChart as c">
+          <h2>GPs by tests pending</h2>
+          <p class="subhint">Tests still needed to reach 30 per 1,000 population</p>
+          <app-nd-chart
+            [labels]="c.labels"
+            [values]="c.values"
+            [height]="c.height"
+            colors="#0a4f7a"
+            seriesLabel="GPs"
+            ariaLabel="Number of GPs in each tests-pending bucket"
+          ></app-nd-chart>
+        </div>
+
+        <div class="panel" *ngIf="awardChart as c">
+          <h2>GPs by award</h2>
+          <p class="subhint">Award status for {{ s.period.to.year }}</p>
+          <app-nd-chart
+            [labels]="c.labels"
+            [values]="c.values"
+            [height]="c.height"
+            [horizontal]="true"
+            [colors]="awardColors"
+            seriesLabel="GPs"
+            ariaLabel="Number of GPs by award"
+          ></app-nd-chart>
+        </div>
+      </div>
+
+      <!-- District-level: Poshan Potli gap list -->
+      <app-nd-action-items
+        *ngIf="level === 'district'"
+        [filters]="filters"
+        [types]="poshanOnly"
+        [showDistrict]="false"
+        [numbered]="false"
+      ></app-nd-action-items>
+
+      <div class="panel">
+        <div class="panel-title-row">
+          <div>
+            <h2>{{ pageTitle }} — {{ childTitle }}-wise drilldown</h2>
+            <p class="subhint" *ngIf="scopeLabel">{{ scopeLabel }}</p>
+          </div>
+          <button
+            class="btn btn-export btn-sm"
+            type="button"
+            (click)="exportExcel()"
+            [disabled]="exporting || loading"
+          >
+            {{ exporting ? 'Preparing…' : 'Export table' }}
+          </button>
+        </div>
+        <app-nd-data-table
+          [columns]="tableColumns"
+          [rows]="tableRows"
+          [rowClass]="rowClass"
+          [clickable]="level !== 'block'"
+          [pageSize]="25"
+          sortBy="name"
+          [searchPlaceholder]="'Search ' + childLabel + '…'"
+          [exportName]="'tb-mukt-' + level + '-drilldown'"
+          [emptyText]="
+            level === 'block'
+              ? 'No GP in this block has submitted entries for the selected period.'
+              : 'No records found for the selected filters.'
+          "
+          (rowClick)="drill($event)"
+        ></app-nd-data-table>
+        <p class="insight">
+          <ng-container *ngIf="level !== 'block'">
+            Insight: {{ childLabel }}s highlighted red are below 50% GP qualification — prioritise
+            testing-pendency closure there first. Greyed rows have no submitted entries yet.
+          </ng-container>
+          <ng-container *ngIf="level === 'block'">
+            Insight: GPs highlighted red have completed less than 50% of their testing target — prioritise
+            testing-pendency closure there first.
+          </ng-container>
+        </p>
+      </div>
+    </ng-container>
+  </ng-container>
+</div>

@@ -33,6 +33,30 @@
       (valueChange)="onLocationChange($event)"
       (gpSelected)="onGpSelected($event)"
     ></app-location-cascade>
+
+    <div class="row g-2 mt-2">
+      <div class="col-12 col-md-6">
+        <label class="form-label">TB Unit (CHC/PHC)</label>
+        <select
+          class="form-select"
+          *ngIf="tbUnits.length; else tbUnitReadonly"
+          [value]="selectedTbUnitId ?? ''"
+          (change)="onTbUnitChange($event)"
+        >
+          <option value="" disabled>Select TB Unit</option>
+          <option *ngFor="let u of tbUnits" [value]="u.id">{{ u.name }}</option>
+        </select>
+        <ng-template #tbUnitReadonly>
+          <div class="readonly highlight">
+            {{ context['tbUnitName'] || 'Select GP to load TB Unit' }}
+          </div>
+        </ng-template>
+      </div>
+      <div class="col-12 col-md-6">
+        <label class="form-label">GP Population</label>
+        <div class="readonly">{{ context['gpPopulation'] || 0 }}</div>
+      </div>
+    </div>
   </div>
 
   <form [formGroup]="form">
@@ -68,7 +92,7 @@
     <!-- 3 · Population & indicators (sequence: TB Unit → pops → metrics) -->
     <div class="panel">
       <div class="panel-head">
-        <h2>3 · Population &amp; indicators</h2>
+        <h2>3 · Indicators</h2>
       </div>
 
       <div class="duplicate-alert" *ngIf="duplicateEntry">
@@ -79,31 +103,8 @@
       </div>
 
       <div class="row g-3">
-        <div class="col-12">
-          <label class="form-label">TB Unit (CHC/PHC)</label>
-          <select
-            class="form-select"
-            *ngIf="tbUnits.length; else tbUnitReadonly"
-            [value]="selectedTbUnitId ?? ''"
-            (change)="onTbUnitChange($event)"
-          >
-            <option value="" disabled>Select TB Unit</option>
-            <option *ngFor="let u of tbUnits" [value]="u.id">{{ u.name }}</option>
-          </select>
-          <ng-template #tbUnitReadonly>
-            <div class="readonly highlight">
-              {{ context['tbUnitName'] || 'Select GP to load TB Unit' }}
-            </div>
-          </ng-template>
-        </div>
-
         <div class="col-md-6">
-          <label class="form-label">GP Population</label>
-          <div class="readonly">{{ context['gpPopulation'] || 0 }}</div>
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">No. of Presumptive TB Tests done in the GPs in  Month (as per Lab Register and NAAT Register)</label>
+          <label class="form-label">Number of Presumptive TB Tests done in the GPs in  Month (as per Lab Register and NAAT Register)</label>
           <input
             type="number"
             min="0"
@@ -121,7 +122,7 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Number of TB Patient diagnosed in the GPs  in Month</label>
+          <label class="form-label">Number of TB Patients diagnosed in the GPs  in Month</label>
           <input
             type="number"
             min="0"
@@ -139,7 +140,8 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Previous year successful treatment (%)  Same Time Period</label>
+          <label class="form-label">Successful treatment % (For the TB cases diagnosed for the same period last year)
+</label>
           <input
             type="number"
             min="0"
@@ -157,7 +159,8 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Eligible for Poshan Potli *</label>
+          <label class="form-label">Number of TB Patients Eligible for Poshan Potli *</label>
+          <label class="form-label">Number of TB Patients Eligible for Poshan Potli *</label>
           <input
             type="number"
             min="0"
@@ -179,7 +182,7 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Consented to Poshan Potli *</label>
+          <label class="form-label">Number of TB Patients Consented to Poshan Potli *</label>
           <input
             type="number"
             min="0"
@@ -201,7 +204,7 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">TB patients received Poshan Potli *</label>
+          <label class="form-label">Number of TB Patients Received Poshan Potli *</label>
           <input
             type="number"
             min="0"

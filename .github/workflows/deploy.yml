@@ -1,0 +1,165 @@
+# TB Mukt UP — build + upload to demo server
+# Triggers: push to main, or manual "Run workflow"
+#
+# Required GitHub Secrets (Settings → Secrets and variables → Actions):
+#   DEPLOY_HOST            e.g. tbmukht.demoquaeretech.in  OR server IP
+#   DEPLOY_USERNAME        SSH / SFTP user
+#   DEPLOY_PASSWORD        password  (OR use DEPLOY_SSH_KEY instead)
+#   DEPLOY_SSH_KEY         private key (optional if password set)
+#   DEPLOY_PORT            SSH port (optional, default 22)
+#   DEPLOY_FRONTEND_PATH   remote path for Angular dist  e.g. /var/www/tbmukht/frontend
+#   DEPLOY_BACKEND_PATH    remote path for Node API      e.g. /var/www/tbmukht/backend
+#   DEPLOY_RESTART_CMD     optional shell after upload   e.g. pm2 restart tbmukt-api
+
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tb-mukt-up/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'What to deploy'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - frontend
+          - backend
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_frontend: ${{ steps.flags.outputs.frontend }}
+      deploy_backend: ${{ steps.flags.outputs.backend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve deploy targets
+        id: flags
+        run: |
+          TARGET="${{ github.event.inputs.target || 'both' }}"
+          if [ "$TARGET" = "both" ] || [ "$TARGET" = "frontend" ]; then echo "frontend=true" >> "$GITHUB_OUTPUT"; else echo "frontend=false" >> "$GITHUB_OUTPUT"; fi
+          if [ "$TARGET" = "both" ] || [ "$TARGET" = "backend" ]; then echo "backend=true" >> "$GITHUB_OUTPUT"; else echo "backend=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: |
+            tb-mukt-up/frontend/package-lock.json
+            tb-mukt-up/backend/package-lock.json
+
+      - name: Install & build frontend
+        if: steps.flags.outputs.frontend == 'true'
+        working-directory: tb-mukt-up/frontend
+        run: |
+          npm ci
+          npm run build -- --configuration=production
+
+      - name: Pack frontend artifact
+        if: steps.flags.outputs.frontend == 'true'
+        run: |
+          mkdir -p artifacts
+          # Angular 19 application builder output
+          if [ -d tb-mukt-up/frontend/dist/frontend/browser ]; then
+            cp -r tb-mukt-up/frontend/dist/frontend/browser artifacts/frontend
+          else
+            cp -r tb-mukt-up/frontend/dist/frontend artifacts/frontend
+          fi
+
+      - name: Install backend (production deps)
+        if: steps.flags.outputs.backend == 'true'
+        working-directory: tb-mukt-up/backend
+        run: |
+          npm ci --omit=dev
+          mkdir -p ../../artifacts/backend
+          rsync -a \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='node_modules' \
+            --exclude='scripts' \
+            --exclude='exports' \
+            --exclude='*.log' \
+            ./ ../../artifacts/backend/
+          # lockfile for server-side npm ci
+          cp package-lock.json ../../artifacts/backend/
+          cp package.json ../../artifacts/backend/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-mukt-build
+          path: artifacts/
+          retention-days: 7
+
+  deploy:
+    name: Upload to server
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: tb-mukt-build
+          path: artifacts
+
+      - name: Deploy frontend (SFTP)
+        if: needs.build.outputs.deploy_frontend == 'true'
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
+          server: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          password: ${{ secrets.DEPLOY_PASSWORD }}
+          ssh_private_key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          local_path: './artifacts/frontend/*'
+          remote_path: ${{ secrets.DEPLOY_FRONTEND_PATH }}
+          sftpArgs: '-o ConnectTimeout=20'
+
+      - name: Deploy backend files (SFTP)
+        if: needs.build.outputs.deploy_backend == 'true'
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
+          server: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          password: ${{ secrets.DEPLOY_PASSWORD }}
+          ssh_private_key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          local_path: './artifacts/backend/*'
+          remote_path: ${{ secrets.DEPLOY_BACKEND_PATH }}
+          sftpArgs: '-o ConnectTimeout=20'
+
+      - name: Install backend deps + restart on server
+        if: needs.build.outputs.deploy_backend == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        continue-on-error: true
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          password: ${{ secrets.DEPLOY_PASSWORD }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            set -e
+            cd "${{ secrets.DEPLOY_BACKEND_PATH }}"
+            if command -v npm >/dev/null 2>&1; then
+              npm ci --omit=dev
+            fi
+            RESTART_CMD='${{ secrets.DEPLOY_RESTART_CMD }}'
+            if [ -n "$RESTART_CMD" ]; then
+              eval "$RESTART_CMD"
+            fi

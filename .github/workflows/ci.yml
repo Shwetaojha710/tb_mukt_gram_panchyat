@@ -1,0 +1,45 @@
+# Build check on every PR / push (no server upload)
+name: CI Build
+
+on:
+  pull_request:
+    paths:
+      - 'tb-mukt-up/**'
+      - '.github/workflows/ci.yml'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'tb-mukt-up/**'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tb-mukt-up/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: tb-mukt-up/frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build -- --configuration=production
+
+  build-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tb-mukt-up/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: tb-mukt-up/backend/package-lock.json
+      - run: npm ci
+      - name: Syntax check backend entry
+        run: node --check server.js

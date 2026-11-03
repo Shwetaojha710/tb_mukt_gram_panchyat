@@ -43,6 +43,12 @@ export const routes: Routes = [
           import('./dashboard/block/block.component').then((m) => m.BlockDashboardComponent),
       },
       {
+        path: 'new-dashboard',
+        canActivate: [roleGuard(['STATE', 'DIVISION', 'DISTRICT', 'TEHSIL', 'BLOCK'])],
+        loadComponent: () =>
+          import('./new-dashboard/new-dashboard.component').then((m) => m.NewDashboardComponent),
+      },
+      {
         path: 'tb-entry',
         canActivate: [roleGuard(['TEHSIL', 'BLOCK'])],
         loadComponent: () => import('./tb-entry/tb-entry.component').then((m) => m.TbEntryComponent),

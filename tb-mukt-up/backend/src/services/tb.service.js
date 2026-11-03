@@ -20,9 +20,9 @@ function validateNumbers(body) {
       throw new AppError(`${f} must be a non-negative number`, 400);
     }
   }
-  if (Number(body.tbDiagnosed) > Number(body.testedNaat)) {
-    throw new AppError('TB cases diagnosed cannot exceed individuals tested', 400);
-  }
+  // if (Number(body.tbDiagnosed) > Number(body.testedNaat)) {
+  //   throw new AppError('TB cases diagnosed cannot exceed individuals tested', 400);
+  // }
   if (Number(body.poshanEligible) > Number(body.tbDiagnosed)) {
     throw new AppError(
       'Eligible for Poshan Potli cannot be more than TB cases diagnosed against tested',
@@ -306,7 +306,7 @@ function mapEntry(row) {
   };
 }
 
-/** Attach master-settings based edit/submit flags for list UI */
+/** Attach edit/submit flags for list UI — last-date deadline disabled, always editable */
 function withEditFlags(entry, settings, user) {
   if (!entry) return entry;
 
@@ -316,21 +316,9 @@ function withEditFlags(entry, settings, user) {
     entry.reportingMonth
   );
 
-  const now = new Date();
-  const isState = String(user?.role || '').toUpperCase() === 'STATE';
-
-  let canEdit = false;
-  if (isState) {
-    canEdit = true;
-  } else if (entry.status === 'DRAFT') {
-    canEdit = now <= submitDeadline;
-  } else if (entry.status === 'SUBMITTED') {
-    canEdit = now <= editDeadline;
-  }
-
   return {
     ...entry,
-    canEdit,
+    canEdit: true,
     editUntil: editDeadline.toISOString(),
     submitUntil: submitDeadline.toISOString(),
     editDeadlineDay: settings.editDeadlineDay,

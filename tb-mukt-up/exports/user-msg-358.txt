@@ -1,0 +1,39 @@
+[Image]
+<image_files>
+The following images were provided by the user and saved to the workspace for future use:
+1. C:\Users\Lakshya\.cursor\projects\c-Users-Lakshya-Documents-GitHub-tb-mukt-gram-panchyat/assets/c__Users_Lakshya_AppData_Roaming_Cursor_User_workspaceStorage_7d747ffe511c50ab72ee7b91f8dba502_images_image-45e4aa9e-c285-4299-855b-3da2e493076a.png
+
+These images can be copied for use in other locations.
+</image_files>
+<timestamp>Monday, Aug 24, 2026, 1:10 PM (UTC+5:30)</timestamp>
+<user_query>
+make a three login distirct,state,block  ye district ka hai  	Filter is required for District, Block and GP for all the data points	Date filter (From and To)	 	 	 	 
+ 	 	 	 	 	 	 
+ 	Fields	View	 	 	 	 
+ 	State Name	 	 	 	 	 
+ 	District Code and District Name	 	 	 	 	 
+ 	Development Block Code and Development Block Name	 	 	 	 	 
+ 	Gram Panchayat Code and Gram Panchayat Name	 	 	 	 	 
+ 	Gram Panchayat Population	 	 	 	 	 
+ 	Village Code, Village Name and Village Population, where applicable	 	 	 	 	 
+ 	TB Unit Name	 	 	 	 	 
+ 	Number of Presumptive Individuals tested in the State in NAAT (For the reporting month)	 	 	 	 	 
+ 	Number of TB cases diagnosed among tested in the State(For the reporting month)	 	 	 	 	 
+ 	Number of TB cases from the previous year successfully completing treatment >90% (For the reporting month) in the State	 	 	 	 	 
+ 	Number of TB Patients receiving Poshan Potli from Nikshay Mitra (For the reporting month) in the State	 	 	 	 	 
+ 	Number of Presumptive Individuals tested in the State in NAAT (From January till the reporting month)	 	 	 	 	 
+ 	Number of TB cases diagnosed among tested (From January till the reporting month) in the State	 	 	 	 	 
+ 	Number of TB cases from the previous year successfully completing treatment >90% (From January till the reporting month) in the State	 	 	 	 	 
+ 	Number of TB Patients receiving Poshan Potli from Nikshay Mitra (From January till the reporting month) in the State	 	 	 	 	 
+ 	Number of testing pendind to qualify (From January till the reporting month) in the State	 	Test Pnding (1-10,11-20,20-30,30-50, above 50)	 	 	 
+ 	Number of  Poshan potli pending to qualify (From January till the reporting month)in the State	 	 	 	 	 
+ 	No. GP qualified from TB Mukt Panchayat (From January till the reporting month) in the State	 	 	 	 	 
+ 	Current Status  – Bronze/Silver/Gold status - No. of GPs as applicable (From January till the reporting month) in the State	 No. of Bronze/ No. of Silver/ No. of Gold	 	 	 	 
+ 	Linelist of GP qualified from TB Mukt Panchayat (From January till the reporting month) for all the TB Units in the State	(Yes/No) (Yes in Green No in Red)	Linelist can be downloaded for Qualified GPS	 	 	 
+ 	Current Status of GP (Line list)– Bronze/Silver/Gold status as applicable (From January till the reporting month) for all the TB Units in the State	Bronze/Silver/Gold	 	 	 	 
+ 	Previous year status of GPs 	Bronze/Silver/Gold	 	Previous year data be received from STC	 	 
+ 	District Ranking -Top and Bottom 10 District based on pending GPs	 	 	 	 	 
+ 	District Performance - No. of Districts based on No. of Gold, Siver, Bronze GPs	 	 	 	 	 
+ 	 	 	 	 	 	 
+ 	 	 	 	 	 	 
+</user_query>
