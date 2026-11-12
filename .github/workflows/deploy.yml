@@ -109,8 +109,37 @@ jobs:
     name: Upload to server
     needs: build
     runs-on: ubuntu-latest
-    environment: production
+    # Uses Repository secrets (Settings → Secrets and variables → Actions).
+    # Do not require Environment "production" unless you also add the same
+    # secrets under that environment.
     steps:
+      - name: Check deploy secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USERNAME: ${{ secrets.DEPLOY_USERNAME }}
+          # DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_FRONTEND_PATH: ${{ secrets.DEPLOY_FRONTEND_PATH }}
+          DEPLOY_BACKEND_PATH: ${{ secrets.DEPLOY_BACKEND_PATH }}
+        run: |
+          missing=0
+          for name in DEPLOY_HOST DEPLOY_USERNAME DEPLOY_FRONTEND_PATH DEPLOY_BACKEND_PATH; do
+            eval "val=\$$name"
+            if [ -z "$val" ]; then
+              echo "::error::$name is empty. Add it under Settings → Secrets → Actions (or Environment: production)."
+              missing=1
+            fi
+          done
+          if [ -z "$DEPLOY_PASSWORD" ] && [ -z "$DEPLOY_SSH_KEY" ]; then
+            echo "::error::Set DEPLOY_PASSWORD or DEPLOY_SSH_KEY (at least one)."
+            missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then
+            echo "See DEPLOY.md for the full secret list."
+            exit 1
+          fi
+          echo "Deploy secrets look present (values not printed)."
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -123,9 +152,9 @@ jobs:
         with:
           server: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USERNAME }}
-          password: ${{ secrets.DEPLOY_PASSWORD }}
+          # password: ${{ secrets.DEPLOY_PASSWORD }}
           ssh_private_key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          port: ${{ secrets.DEPLOY_PORT != '' && secrets.DEPLOY_PORT || 22 }}
           local_path: './artifacts/frontend/*'
           remote_path: ${{ secrets.DEPLOY_FRONTEND_PATH }}
           sftpArgs: '-o ConnectTimeout=20'
@@ -136,9 +165,9 @@ jobs:
         with:
           server: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USERNAME }}
-          password: ${{ secrets.DEPLOY_PASSWORD }}
+          # password: ${{ secrets.DEPLOY_PASSWORD }}
           ssh_private_key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          port: ${{ secrets.DEPLOY_PORT != '' && secrets.DEPLOY_PORT || 22 }}
           local_path: './artifacts/backend/*'
           remote_path: ${{ secrets.DEPLOY_BACKEND_PATH }}
           sftpArgs: '-o ConnectTimeout=20'
@@ -150,9 +179,9 @@ jobs:
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USERNAME }}
-          password: ${{ secrets.DEPLOY_PASSWORD }}
+          # password: ${{ secrets.DEPLOY_PASSWORD }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          port: ${{ secrets.DEPLOY_PORT != '' && secrets.DEPLOY_PORT || 22 }}
           script: |
             set -e
             cd "${{ secrets.DEPLOY_BACKEND_PATH }}"

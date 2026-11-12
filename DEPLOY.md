@@ -27,8 +27,14 @@ Production site: `https://tbmukht.demoquaeretech.in`
 
 \* Use **either** `DEPLOY_PASSWORD` **or** `DEPLOY_SSH_KEY`.
 
-3. (Optional) **Settings → Environments → New environment** named `production`  
-   - Add protection rules / required reviewers if you want.
+3. Confirm secret **values** match the live server (FileZilla paths):
+
+- `DEPLOY_FRONTEND_PATH` = `/var/www/html/tbmukht.demoquaeretech.in/dist`
+- `DEPLOY_BACKEND_PATH` = `/var/www/html/tbmukht.demoquaeretech.in/api`
+
+### Fix: `error: missing server host`
+
+`DEPLOY_HOST` was empty for the workflow. Add/update repository secrets, push latest `deploy.yml`, then **Actions → Build & Deploy → Run workflow**.
 
 ## How to upload / deploy
 
