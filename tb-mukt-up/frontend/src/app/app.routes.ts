@@ -72,6 +72,13 @@ export const routes: Routes = [
             (m) => m.TbEntrySettingsComponent
           ),
       },
+      {
+        path: 'change-password',
+        loadComponent: () =>
+          import('./auth/change-password/change-password.component').then(
+            (m) => m.ChangePasswordComponent
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: 'login' },

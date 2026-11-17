@@ -52,6 +52,14 @@ export class AuthService {
     return this.api.post<{ success: boolean; message: string }>('/auth/reset-password', payload);
   }
 
+  changePassword(payload: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) {
+    return this.api.post<{ success: boolean; message: string }>('/auth/change-password', payload);
+  }
+
   logout() {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);

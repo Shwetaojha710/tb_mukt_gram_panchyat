@@ -7,8 +7,8 @@
 #   DEPLOY_PASSWORD        password  (OR use DEPLOY_SSH_KEY instead)
 #   DEPLOY_SSH_KEY         private key (optional if password set)
 #   DEPLOY_PORT            SSH port (optional, default 22)
-#   DEPLOY_FRONTEND_PATH   remote path for Angular dist  e.g. /var/www/tbmukht/frontend
-#   DEPLOY_BACKEND_PATH    remote path for Node API      e.g. /var/www/tbmukht/backend
+#   DEPLOY_FRONTEND_PATH   nginx root, e.g. /var/www/html/tbmukht.demoquaeretech.in/dist/frontend/browser
+#   DEPLOY_BACKEND_PATH    Node API path, e.g. /var/www/html/tbmukht.demoquaeretech.in/api
 #   DEPLOY_RESTART_CMD     optional shell after upload   e.g. pm2 restart tbmukt-api
 
 name: Build & Deploy

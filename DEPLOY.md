@@ -21,15 +21,16 @@ Production site: `https://tbmukht.demoquaeretech.in`
 | `DEPLOY_PASSWORD` | server password | Yes\* |
 | `DEPLOY_SSH_KEY` | private key PEM | Yes\* (password **or** key) |
 | `DEPLOY_PORT` | `22` | No (default 22) |
-| `DEPLOY_FRONTEND_PATH` | `/var/www/tbmukht/frontend` or IIS site path | Yes |
-| `DEPLOY_BACKEND_PATH` | `/var/www/tbmukht/backend` | Yes |
+| `DEPLOY_FRONTEND_PATH` | `/var/www/html/tbmukht.demoquaeretech.in/dist/frontend/browser` | Yes |
+| `DEPLOY_BACKEND_PATH` | `/var/www/html/tbmukht.demoquaeretech.in/api` | Yes |
 | `DEPLOY_RESTART_CMD` | `pm2 restart tbmukt-api` | No |
 
 \* Use **either** `DEPLOY_PASSWORD` **or** `DEPLOY_SSH_KEY`.
 
-3. Confirm secret **values** match the live server (FileZilla paths):
+3. Confirm secret **values** match nginx (not just FileZilla `dist/`):
 
-- `DEPLOY_FRONTEND_PATH` = `/var/www/html/tbmukht.demoquaeretech.in/dist`
+- `DEPLOY_FRONTEND_PATH` = `/var/www/html/tbmukht.demoquaeretech.in/dist/frontend/browser`  
+  (nginx `root` — uploading only to `…/dist` will **not** update the live site)
 - `DEPLOY_BACKEND_PATH` = `/var/www/html/tbmukht.demoquaeretech.in/api`
 
 ### Fix: `error: missing server host`

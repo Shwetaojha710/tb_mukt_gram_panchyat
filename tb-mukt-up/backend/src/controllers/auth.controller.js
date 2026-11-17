@@ -60,6 +60,24 @@ async function me(req, res, next) {
   }
 }
 
+async function changePassword(req, res, next) {
+  try {
+    const schema = Joi.object({
+      currentPassword: Joi.string().required(),
+      newPassword: Joi.string().min(8).max(64).required(),
+      confirmPassword: Joi.any().valid(Joi.ref('newPassword')).required().messages({
+        'any.only': 'Passwords do not match',
+      }),
+    });
+    const { error, value } = schema.validate(req.body);
+    if (error) throw new AppError(error.details[0].message, 400);
+    const data = await authService.changePassword(req.user, value);
+    res.json({ success: true, ...data });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function userTypes(_req, res, next) {
   try {
     const userTypeService = require('../services/userType.service');
@@ -75,6 +93,7 @@ module.exports = {
   login,
   forgotPassword,
   resetPassword,
+  changePassword,
   me,
   userTypes,
   registerValidators: [validate(registerSchema)],
