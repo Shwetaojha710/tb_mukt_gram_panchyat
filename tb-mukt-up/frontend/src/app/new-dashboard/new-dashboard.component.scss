@@ -1,0 +1,227 @@
+.nd-page {
+  display: grid;
+  gap: 0.85rem;
+  animation: fade-up 0.35s ease both;
+  min-width: 0;
+}
+
+/* Grid children must be allowed to shrink so wide tables scroll inside their own box */
+.nd-page > * {
+  min-width: 0;
+}
+
+.nd-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--tb-saffron);
+}
+
+.nd-head h1 {
+  margin: 0.1rem 0 0;
+  color: var(--tb-blue-deep);
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+
+.nd-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.period-chip {
+  background: #e8f2f9;
+  color: var(--tb-blue-deep);
+  font-weight: 700;
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #c5dced;
+  white-space: nowrap;
+}
+
+.btn-export {
+  border: none;
+  background: linear-gradient(135deg, #1f7a4c, #0f5e38);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.55rem;
+  box-shadow: 0 6px 14px rgba(31, 122, 76, 0.22);
+}
+
+.btn-export:hover:not(:disabled) {
+  filter: brightness(1.05);
+  color: #fff;
+}
+
+.btn-export:disabled {
+  opacity: 0.65;
+}
+
+.nd-tabs {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nd-tab {
+  flex: 0 0 auto;
+  border: 1px solid var(--tb-line);
+  background: #fff;
+  color: var(--tb-blue-deep);
+  font-weight: 650;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nd-tab:hover {
+  background: #eef5fb;
+}
+
+.nd-tab.active {
+  background: var(--tb-blue);
+  border-color: var(--tb-blue);
+  color: #fff;
+}
+
+.panel {
+  background: var(--tb-surface);
+  border: 1px solid var(--tb-line);
+  border-radius: 14px;
+  padding: 0.85rem 0.95rem 0.95rem;
+  box-shadow: 0 6px 18px rgba(7, 54, 82, 0.04);
+  min-width: 0;
+}
+
+.filters-panel {
+  border-color: #cfe0ec;
+  padding: 0.65rem 0.75rem;
+  /* month picker popover must sit above the cards below */
+  position: relative;
+  z-index: 20;
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--tb-blue-deep);
+}
+
+.subhint {
+  margin: 0.15rem 0 0.55rem;
+  color: var(--tb-muted);
+}
+
+.panel-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.55rem;
+}
+
+.panel-title-row .subhint {
+  margin-bottom: 0;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.chart-grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.notes ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--tb-muted);
+  display: grid;
+  gap: 0.2rem;
+}
+
+.notes strong {
+  color: var(--tb-blue-deep);
+}
+
+.insight {
+  margin: 0.65rem 0 0;
+  padding: 0.5rem 0.7rem;
+  background: #fff4e8;
+  border: 1px solid #f0c896;
+  border-radius: 8px;
+  color: #7a4300;
+  font-weight: 600;
+}
+
+.info-banner {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  background: #eef5fb;
+  border: 1px solid var(--tb-line);
+  border-radius: 10px;
+  color: var(--tb-blue-deep);
+  font-weight: 600;
+}
+
+.state-box {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--tb-muted);
+  background: #fff;
+  border: 1px dashed var(--tb-line);
+  border-radius: 14px;
+}
+
+.state-box strong {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--tb-blue-deep);
+}
+
+.state-box p {
+  margin: 0.4rem 0 0;
+}
+
+.state-box .btn {
+  margin-top: 0.75rem;
+}
+
+.state-box.error {
+  border-color: #efb4b4;
+  background: #fff8f8;
+}
+
+.state-box.error strong {
+  color: #b71c1c;
+}
+
+@media (max-width: 1100px) {
+  .chart-grid,
+  .chart-grid.two {
+    grid-template-columns: 1fr;
+  }
+}

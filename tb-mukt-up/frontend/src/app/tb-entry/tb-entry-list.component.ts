@@ -92,38 +92,16 @@ private submitDeadlineDate(reportingYear: number, reportingMonth: number): Date 
   return new Date(next.year, next.month - 1, this.submitDeadlineDay, 23, 59, 59, 999);
 }
 
-/** Prefer API canEdit from master settings; fallback to local calc */
-canEdit(e: any): boolean {
-  if (typeof e?.canEdit === 'boolean') return e.canEdit;
-  if (!e?.reportingYear || !e?.reportingMonth) return false;
-  const now = new Date();
-
-  if (e.status === 'DRAFT') {
-    return now <= this.submitDeadlineDate(e.reportingYear, e.reportingMonth);
-  }
-  if (e.status === 'SUBMITTED') {
-    return now <= this.editDeadlineDate(e.reportingYear, e.reportingMonth);
-  }
-  return false;
+/** Last-date deadline disabled — always allow edit */
+canEdit(_e: any): boolean {
+  return true;
 }
 
-editClosedReason(e: any): string {
-  if (e?.status === 'SUBMITTED') {
-    const d = this.editDeadlineDate(e.reportingYear, e.reportingMonth);
-    return `Edit closed (till ${d.toLocaleDateString('en-IN')})`;
-  }
-  if (e?.status === 'DRAFT') {
-    const d = this.submitDeadlineDate(e.reportingYear, e.reportingMonth);
-    return `Submit/edit closed (till ${d.toLocaleDateString('en-IN')})`;
-  }
-  return 'Edit closed';
+editClosedReason(_e: any): string {
+  return '';
 }
 
 openEdit(e: any) {
-  if (!this.canEdit(e)) {
-    this.notify.error(this.editClosedReason(e));
-    return;
-  }
   this.router.navigate(['/tb-entry'], {
     queryParams: {
       gpId: e.gpId,

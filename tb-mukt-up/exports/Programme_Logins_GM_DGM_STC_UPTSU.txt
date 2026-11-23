@@ -1,0 +1,29 @@
+TB Mukt Gram Panchayat — Programme login credentials
+Website: https://tbmukht.demoquaeretech.in
+Role: STATE (full state dashboard access)
+Generated: 2026-11-17
+
+--------------------------------------------------
+1) GM, NHM
+   LoginId : GMNHM001
+   Password: GQLCXY3EKA
+
+2) DGM, NHM
+   LoginId : DGMNHM001
+   Password: VZ7W6PSTSX
+
+3) STC
+   LoginId : STCUP001
+   Password: NUEF9ZMHAU
+
+4) UPTSU
+   LoginId : UPTSU001
+   Password: WTKD8BD98D
+--------------------------------------------------
+
+Password change:
+- After login, open "Change password" in the left sidebar (above Logout).
+- Available for ALL logged-in users (State / District / Block / programme logins).
+- Requires current password + new password (min 8 characters).
+
+Keep this file confidential — authorised users only.

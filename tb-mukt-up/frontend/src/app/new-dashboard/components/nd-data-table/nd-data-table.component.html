@@ -1,0 +1,124 @@
+<div class="dt-toolbar">
+  <input
+    type="search"
+    class="form-control form-control-sm dt-search"
+    [placeholder]="searchPlaceholder"
+    [attr.aria-label]="searchPlaceholder"
+    [ngModel]="search"
+    (ngModelChange)="onSearch($event)"
+  />
+  <button
+    *ngIf="exportName"
+    class="btn btn-outline-primary btn-sm"
+    type="button"
+    (click)="onExport()"
+    [disabled]="exporting || (!serverSide && !matched) || (serverSide && !total && !matched)"
+  >
+    {{ exporting ? 'Exporting…' : 'Download CSV' }}
+  </button>
+</div>
+
+<div class="dt-wrap" [class.is-loading]="loading">
+  <table class="table align-middle dt-table">
+    <thead>
+      <tr>
+        <th
+          *ngFor="let c of columns; let first = first"
+          [class.col-first]="first"
+          [class.num]="c.type === 'num' || c.type === 'pct'"
+          [class.sortable]="c.sortable !== false"
+          [attr.aria-sort]="ariaSort(c)"
+        >
+          <button *ngIf="c.sortable !== false; else plainHead" type="button" class="th-btn" (click)="sort(c)">
+            <span>{{ c.label }}</span>
+            <span class="sort-ico" aria-hidden="true">{{
+              sortBy !== c.key ? '↕' : sortDir === 'asc' ? '↑' : '↓'
+            }}</span>
+          </button>
+          <ng-template #plainHead>{{ c.label }}</ng-template>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        *ngFor="let r of pageRows"
+        [ngClass]="rowClass ? rowClass(r) : ''"
+        [class.clickable]="clickable"
+        [attr.tabindex]="clickable ? 0 : null"
+        (click)="clickable && rowClick.emit(r)"
+        (keydown.enter)="clickable && rowClick.emit(r)"
+      >
+        <td
+          *ngFor="let c of columns; let first = first"
+          [class.col-first]="first"
+          [class.num]="c.type === 'num' || c.type === 'pct'"
+          [ngSwitch]="c.type || 'text'"
+        >
+          <ng-container *ngSwitchCase="'num'">{{ fmt(r[c.key]) }}</ng-container>
+          <ng-container *ngSwitchCase="'pct'">{{ fmt(r[c.key]) }}%</ng-container>
+          <span *ngSwitchCase="'yesno'" class="yn" [class.yes]="isOn(r[c.key])" [class.no]="!isOn(r[c.key])">
+            {{ isOn(r[c.key]) ? 'Yes' : 'No' }}
+          </span>
+          <ng-container *ngSwitchCase="'check'">
+            <span *ngIf="isOn(r[c.key]); else dash" class="yn yes">Yes</span>
+            <ng-template #dash><span class="dash">–</span></ng-template>
+          </ng-container>
+          <span *ngSwitchCase="'bucket'" class="bucket-pill" [class.hot]="r[c.key] === 'Above 50'">
+            {{ r[c.key] }}
+          </span>
+          <ng-container *ngSwitchDefault>{{ r[c.key] || '-' }}</ng-container>
+        </td>
+      </tr>
+
+      <tr *ngIf="error && !loading">
+        <td [attr.colspan]="columns.length" class="dt-state">
+          <p class="dt-error" role="alert">{{ error }}</p>
+          <button class="btn btn-outline-primary btn-sm" type="button" (click)="retry.emit()">Retry</button>
+        </td>
+      </tr>
+      <tr *ngIf="!error && !loading && !pageRows.length">
+        <td [attr.colspan]="columns.length" class="dt-state">{{ emptyText }}</td>
+      </tr>
+      <tr *ngIf="loading && !pageRows.length">
+        <td [attr.colspan]="columns.length" class="dt-state">
+          <span class="spinner-border spinner-border-sm text-primary" aria-hidden="true"></span>
+          Loading…
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="dt-footer">
+  <span class="dt-count" aria-live="polite">Showing {{ rangeStart }}–{{ rangeEnd }} of {{ fmt(matched) }}</span>
+  <div class="dt-pager">
+    <label class="dt-size">
+      Rows
+      <select
+        class="form-select form-select-sm"
+        [ngModel]="pageSize"
+        (ngModelChange)="setPageSize($event)"
+        aria-label="Rows per page"
+      >
+        <option *ngFor="let s of pageSizes" [value]="s">{{ s }}</option>
+      </select>
+    </label>
+    <button
+      class="btn btn-outline-secondary btn-sm"
+      type="button"
+      (click)="goTo(page - 1)"
+      [disabled]="page <= 1 || loading"
+    >
+      Prev
+    </button>
+    <span class="dt-page">Page {{ page }} of {{ pageCount }}</span>
+    <button
+      class="btn btn-outline-secondary btn-sm"
+      type="button"
+      (click)="goTo(page + 1)"
+      [disabled]="page >= pageCount || loading"
+    >
+      Next
+    </button>
+  </div>
+</div>

@@ -1,0 +1,78 @@
+<form class="filter-bar" (ngSubmit)="submit()" novalidate>
+  <div class="f-item f-period">
+    <app-month-year-picker
+      label="From"
+      [year]="draft.fromYear"
+      [month]="draft.fromMonth"
+      [minYear]="minYear"
+      [maxYear]="maxYear"
+      (yearChange)="draft.fromYear = $event"
+      (monthChange)="draft.fromMonth = $event"
+    ></app-month-year-picker>
+  </div>
+  <div class="f-item f-period">
+    <app-month-year-picker
+      label="To"
+      [year]="draft.toYear"
+      [month]="draft.toMonth"
+      [minYear]="minYear"
+      [maxYear]="maxYear"
+      (yearChange)="draft.toYear = $event"
+      (monthChange)="draft.toMonth = $event"
+    ></app-month-year-picker>
+  </div>
+
+  <div class="f-item f-select" *ngIf="showDistrict">
+    <label class="form-label" for="nd-district">District</label>
+    <select
+      id="nd-district"
+      class="form-select form-select-sm"
+      name="districtId"
+      [ngModel]="idStr(draft.districtId)"
+      (ngModelChange)="onDistrict($event)"
+    >
+      <option value="">All districts</option>
+      <option *ngFor="let d of districts" [value]="d.id">{{ d.name }}</option>
+    </select>
+  </div>
+
+  <div class="f-item f-select" *ngIf="showBlock">
+    <label class="form-label" for="nd-block">Block</label>
+    <select
+      id="nd-block"
+      class="form-select form-select-sm"
+      name="blockId"
+      [ngModel]="idStr(draft.blockId)"
+      (ngModelChange)="onBlock($event)"
+      [disabled]="!draft.districtId"
+    >
+      <option value="">All blocks</option>
+      <option *ngFor="let b of blocks" [value]="b.id">{{ b.name }}</option>
+    </select>
+  </div>
+
+  <div class="f-item f-select" *ngIf="showGp">
+    <label class="form-label" for="nd-gp">GP</label>
+    <select
+      id="nd-gp"
+      class="form-select form-select-sm"
+      name="gpId"
+      [ngModel]="idStr(draft.gpId)"
+      (ngModelChange)="onGp($event)"
+      [disabled]="!draft.blockId"
+    >
+      <option value="">All GPs</option>
+      <option *ngFor="let g of gps" [value]="g.id">{{ g.name }}</option>
+    </select>
+  </div>
+
+  <div class="f-item f-actions">
+    <button class="btn btn-primary btn-sm" type="submit" [disabled]="loading">
+      {{ loading ? 'Loading…' : 'Apply' }}
+    </button>
+    <button class="btn btn-outline-secondary btn-sm" type="button" (click)="reset.emit()" [disabled]="loading">
+      Reset
+    </button>
+  </div>
+</form>
+<p class="filter-error" *ngIf="error" role="alert">{{ error }}</p>

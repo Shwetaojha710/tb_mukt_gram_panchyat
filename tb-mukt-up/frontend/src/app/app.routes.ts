@@ -43,6 +43,12 @@ export const routes: Routes = [
           import('./dashboard/block/block.component').then((m) => m.BlockDashboardComponent),
       },
       {
+        path: 'new-dashboard',
+        canActivate: [roleGuard(['STATE', 'DIVISION', 'DISTRICT', 'TEHSIL', 'BLOCK'])],
+        loadComponent: () =>
+          import('./new-dashboard/new-dashboard.component').then((m) => m.NewDashboardComponent),
+      },
+      {
         path: 'tb-entry',
         canActivate: [roleGuard(['TEHSIL', 'BLOCK'])],
         loadComponent: () => import('./tb-entry/tb-entry.component').then((m) => m.TbEntryComponent),
@@ -64,6 +70,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./settings/tb-entry-settings/tb-entry-settings.component').then(
             (m) => m.TbEntrySettingsComponent
+          ),
+      },
+      {
+        path: 'change-password',
+        loadComponent: () =>
+          import('./auth/change-password/change-password.component').then(
+            (m) => m.ChangePasswordComponent
           ),
       },
     ],

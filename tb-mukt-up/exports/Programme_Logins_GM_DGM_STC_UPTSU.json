@@ -1,0 +1,42 @@
+{
+  "website": "https://tbmukht.demoquaeretech.in",
+  "createdAt": "2026-11-17T08:44:16.231Z",
+  "accounts": [
+    {
+      "status": "created",
+      "label": "GM, NHM",
+      "role": "STATE",
+      "adminId": 196383,
+      "loginId": "GMNHM001",
+      "password": "GQLCXY3EKA",
+      "name": "GM NHM"
+    },
+    {
+      "status": "created",
+      "label": "DGM, NHM",
+      "role": "STATE",
+      "adminId": 196384,
+      "loginId": "DGMNHM001",
+      "password": "VZ7W6PSTSX",
+      "name": "DGM NHM"
+    },
+    {
+      "status": "created",
+      "label": "STC",
+      "role": "STATE",
+      "adminId": 196385,
+      "loginId": "STCUP001",
+      "password": "NUEF9ZMHAU",
+      "name": "STC State TB Cell"
+    },
+    {
+      "status": "created",
+      "label": "UPTSU",
+      "role": "STATE",
+      "adminId": 196386,
+      "loginId": "UPTSU001",
+      "password": "WTKD8BD98D",
+      "name": "UPTSU Technical Support Unit"
+    }
+  ]
+}

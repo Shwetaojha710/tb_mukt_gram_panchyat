@@ -10,6 +10,7 @@ const locationRoutes = require('./routes/location.routes');
 const tbRoutes = require('./routes/tb.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const settingsRoutes = require('./routes/settings.routes');
+const newDashboardRoutes = require('./routes/newDashboard.routes');
 const app = express();
 
 const isDev = (process.env.NODE_ENV || 'development') !== 'production';
@@ -80,6 +81,7 @@ app.use('/api/locations', locationRoutes);
 app.use('/api/tb', tbRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/new-dashboard', newDashboardRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });

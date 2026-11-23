@@ -163,7 +163,12 @@
   line-height: 1;
   padding: 0.45rem 0.75rem;
   cursor: pointer;
+  text-decoration: none;
   transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.change-pw {
+  margin-bottom: 0.45rem;
 }
 
 .logout-ico {

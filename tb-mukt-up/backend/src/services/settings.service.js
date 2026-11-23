@@ -114,43 +114,9 @@ function isStateAdmin(user) {
 }
 
 async function enforceEntryWindow(user, body, status, existingStatus) {
-  // State admin can bypass deadlines (optional — remove if not wanted)
-  if (isStateAdmin(user)) return;
-
-  const settings = await getEntrySettings();
-  const year = Number(body.reportingYear);
-  const month = Number(body.reportingMonth);
-
-  const allowed = buildAllowedPeriods(settings.reportingMonthsBack);
-  const periodOk = allowed.some((p) => p.year === year && p.month === month);
-  if (!periodOk) {
-    throw new AppError(
-      `Only last ${settings.reportingMonthsBack} completed months are allowed`,
-      400
-    );
-  }
-
-  const now = new Date();
-  const { submitDeadline, editDeadline } = getDeadlines(settings, year, month);
-
-  // Updating an already submitted entry → edit window
-  if (existingStatus === 'SUBMITTED') {
-    if (now > editDeadline) {
-      throw new AppError(
-        `Edit closed for this reporting month (allowed until ${editDeadline.toLocaleDateString('en-IN')})`,
-        400
-      );
-    }
-    return;
-  }
-
-  // New / draft / submit → submit window
-  if (status === 'SUBMITTED' && now > submitDeadline) {
-    throw new AppError(
-      `Submission closed for this reporting month (allowed until ${submitDeadline.toLocaleDateString('en-IN')})`,
-      400
-    );
-  }
+  // Submit/edit last-date (deadline) validation disabled — entries can be saved anytime.
+  // Reporting-months-back check also skipped so save is not blocked by period window.
+  return;
 }
 
 module.exports = {

@@ -11,5 +11,6 @@ router.post('/reset-password', ctrl.resetPassword);
 
 const { authenticate } = require('../middleware/auth');
 router.get('/me', authenticate, ctrl.me);
+router.post('/change-password', authenticate, ctrl.changePassword);
 
 module.exports = router;

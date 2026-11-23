@@ -375,6 +375,50 @@ async function resetPassword({ token, newPassword }) {
   return { message: 'Password updated successfully' };
 }
 
+/**
+ * Logged-in user changes own password (AdminLogin).
+ */
+async function changePassword(jwtUser, { currentPassword, newPassword }) {
+  const adminId = Number(jwtUser?.userId || jwtUser?.id);
+  if (!adminId) throw new AppError('Unauthorized', 401);
+
+  const current = String(currentPassword || '').trim();
+  const next = String(newPassword || '').trim();
+  if (!current || !next) throw new AppError('Current and new password are required', 400);
+  if (next.length < 8) throw new AppError('New password must be at least 8 characters', 400);
+  if (current === next) throw new AppError('New password must be different from current password', 400);
+
+  const result = await query(
+    `
+    SELECT TOP 1 Pk_AdminId, LogPassword
+    FROM dbo.AdminLogin
+    WHERE Pk_AdminId = @adminId
+      AND ISNULL(isDeleted, 0) = 0
+      AND ISNULL(IsActive, 1) = 1
+      AND ISNULL(IsBlock, 0) = 0
+    `,
+    { adminId }
+  );
+  const row = result.recordset[0];
+  if (!row) throw new AppError('User not found', 404);
+
+  const ok = await passwordsMatch(row.LogPassword, current);
+  if (!ok) throw new AppError('Current password is incorrect', 400);
+
+  // Keep plain storage consistent with existing AdminLogin credentials.
+  await query(
+    `
+    UPDATE dbo.AdminLogin
+    SET LogPassword = @newPassword,
+        IsChangePassword = 0
+    WHERE Pk_AdminId = @adminId
+    `,
+    { adminId, newPassword: next }
+  );
+
+  return { message: 'Password changed successfully' };
+}
+
 module.exports = {
   register,
   login,
@@ -382,6 +426,7 @@ module.exports = {
   enrichUserWithNames,
   forgotPassword,
   resetPassword,
+  changePassword,
   publicUser,
   ROLES,
 };
