@@ -43,26 +43,24 @@ function applyScope(user, filters = {}) {
     where.push('e.district_id = @scopeDistrictId');
     params.scopeDistrictId = user.districtId;
   }
-  if (user.role === 'TEHSIL' && user.tehsilId) {
-    where.push('e.tehsil_id = @scopeTehsilId');
-    params.scopeTehsilId = user.tehsilId;
-  }
-  if (user.role === 'BLOCK' && user.blockId) {
+  // Tehsil list comes from dbo.Block — same as Overview / TB Entry List: always scope by block_id
+  if ((user.role === 'TEHSIL' || user.role === 'BLOCK') && (user.blockId || user.tehsilId)) {
     where.push('e.block_id = @scopeBlockId');
-    params.scopeBlockId = user.blockId;
+    params.scopeBlockId = user.blockId || user.tehsilId;
   }
   if ((user.role === 'GP' || user.role === 'VILLAGE') && user.gpId) {
     where.push('e.gp_id = @scopeGpId');
     params.scopeGpId = user.gpId;
   }
 
-  if (filters.districtId) {
+  // Block-scoped users already filtered by block_id; skip client districtId to avoid JWT mismatch emptying results
+  if (filters.districtId && user.role !== 'TEHSIL' && user.role !== 'BLOCK') {
     where.push('e.district_id = @districtId');
     params.districtId = Number(filters.districtId);
   }
-  if (filters.blockId) {
+  if (filters.blockId || filters.tehsilId) {
     where.push('e.block_id = @blockId');
-    params.blockId = Number(filters.blockId);
+    params.blockId = Number(filters.blockId || filters.tehsilId);
   }
   if (filters.gpId) {
     where.push('e.gp_id = @gpId');

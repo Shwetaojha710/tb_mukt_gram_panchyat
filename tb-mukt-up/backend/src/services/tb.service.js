@@ -360,7 +360,8 @@ async function listEntries(user, filters = {}) {
     params.scopeGpId = user.gpId;
   }
 
-  if (filters.districtId) {
+  // Block-scoped users already filtered by block_id; skip client districtId (JWT district can mismatch entry.district_id)
+  if (filters.districtId && user.role !== 'TEHSIL' && user.role !== 'BLOCK') {
     where.push('e.district_id = @districtId');
     params.districtId = Number(filters.districtId);
   }
