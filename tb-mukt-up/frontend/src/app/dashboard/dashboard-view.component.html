@@ -266,7 +266,7 @@
               <td class="num group-y">{{ fmt(r.diagnosedYtd) }}</td>
               <td class="num group-y">{{ fmt(r.treatmentOver90Ytd) }}</td>
               <td class="num group-y">{{ fmt(r.poshanReceivedYtd) }}</td>
-              <td class="num group-y">{{ fmt(r.testingPendingYtd) }}</td>
+              <td class="num group-y">{{ fmtInt(r.testingPendingYtd) }}</td>
               <td><span class="bucket-pill" [attr.data-b]="r.testingPendingBucket || '0'">{{ r.testingPendingBucket || '0' }}</span></td>
               <td class="num group-y">{{ fmt(r.poshanPendingYtd) }}</td>
               <td>
@@ -311,7 +311,7 @@
                 <td><span class="rank-no">{{ i + 1 }}</span></td>
                 <td>{{ r.districtName }}</td>
                 <td>{{ r.qualifiedGps }}/{{ r.totalGps }}</td>
-                <td class="text-end">{{ fmt(r.testingPending) }}</td>
+                <td class="text-end">{{ fmtInt(r.testingPending) }}</td>
               </tr>
               <tr *ngIf="!(rankings?.top10Districts || []).length"><td colspan="4" class="text-muted">No data</td></tr>
             </tbody>
@@ -329,7 +329,7 @@
                 <td><span class="rank-no hot">{{ i + 1 }}</span></td>
                 <td>{{ r.districtName }}</td>
                 <td>{{ r.qualifiedGps }}/{{ r.totalGps }}</td>
-                <td class="text-end">{{ fmt(r.testingPending) }}</td>
+                <td class="text-end">{{ fmtInt(r.testingPending) }}</td>
               </tr>
               <tr *ngIf="!(rankings?.bottom10Districts || []).length"><td colspan="4" class="text-muted">No data</td></tr>
             </tbody>
@@ -530,7 +530,7 @@
               <td class="num group-y">{{ fmt(r.diagnosedYtd) }}</td>
               <td class="num group-y">{{ fmt(r.treatmentOver90Ytd) }}</td>
               <td class="num group-y">{{ fmt(r.poshanReceivedYtd) }}</td>
-              <td class="num group-y">{{ fmt(r.testingPendingYtd) }}</td>
+              <td class="num group-y">{{ fmtInt(r.testingPendingYtd) }}</td>
               <td><span class="bucket-pill" [attr.data-b]="r.testingPendingBucket || '0'">{{ r.testingPendingBucket || '0' }}</span></td>
               <td class="num group-y">{{ fmt(r.poshanPendingYtd) }}</td>
               <td>
@@ -575,7 +575,7 @@
                 <td><span class="rank-no">{{ i + 1 }}</span></td>
                 <td>{{ r.blockName }}</td>
                 <td>{{ r.qualifiedGps }}/{{ r.totalGps }}</td>
-                <td class="text-end">{{ fmt(r.testingPending) }}</td>
+                <td class="text-end">{{ fmtInt(r.testingPending) }}</td>
               </tr>
               <tr *ngIf="!(rankings?.top10Blocks || []).length"><td colspan="4" class="text-muted">No data</td></tr>
             </tbody>
@@ -593,7 +593,7 @@
                 <td><span class="rank-no hot">{{ i + 1 }}</span></td>
                 <td>{{ r.blockName }}</td>
                 <td>{{ r.qualifiedGps }}/{{ r.totalGps }}</td>
-                <td class="text-end">{{ fmt(r.testingPending) }}</td>
+                <td class="text-end">{{ fmtInt(r.testingPending) }}</td>
               </tr>
               <tr *ngIf="!(rankings?.bottom10Blocks || []).length"><td colspan="4" class="text-muted">No data</td></tr>
             </tbody>
@@ -777,7 +777,7 @@
               <td class="num group-y">{{ fmt(r.diagnosedYtd) }}</td>
               <td class="num group-y">{{ fmt(r.treatmentOver90Ytd) }}</td>
               <td class="num group-y">{{ fmt(r.poshanReceivedYtd) }}</td>
-              <td class="num group-y">{{ fmt(r.testingPendingYtd) }}</td>
+              <td class="num group-y">{{ fmtInt(r.testingPendingYtd) }}</td>
               <td><span class="bucket-pill" [attr.data-b]="r.testingPendingBucket || '0'">{{ r.testingPendingBucket || '0' }}</span></td>
               <td class="num group-y">{{ fmt(r.poshanPendingYtd) }}</td>
               <td>
@@ -821,7 +821,7 @@
               <tr *ngFor="let r of rankings?.top10LeastPending || []; let i = index">
                 <td><span class="rank-no">{{ i + 1 }}</span></td>
                 <td>{{ r.gpName }}</td>
-                <td class="text-end">{{ fmt(r.testingPending) }}</td>
+                <td class="text-end">{{ fmtInt(r.testingPending) }}</td>
               </tr>
               <tr *ngIf="!(rankings?.top10LeastPending || []).length"><td colspan="3" class="text-muted">No data</td></tr>
             </tbody>
@@ -838,7 +838,7 @@
               <tr *ngFor="let r of rankings?.bottom10MostPending || []; let i = index">
                 <td><span class="rank-no hot">{{ i + 1 }}</span></td>
                 <td>{{ r.gpName }}</td>
-                <td class="text-end">{{ fmt(r.testingPending) }}</td>
+                <td class="text-end">{{ fmtInt(r.testingPending) }}</td>
               </tr>
               <tr *ngIf="!(rankings?.bottom10MostPending || []).length"><td colspan="3" class="text-muted">No data</td></tr>
             </tbody>

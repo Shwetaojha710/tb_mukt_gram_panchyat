@@ -392,4 +392,10 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
     const v = Number(n) || 0;
     return v.toLocaleString('en-IN', { maximumFractionDigits: 2 });
   }
+
+  /** Whole-number display for test-pending (and similar count) columns. */
+  fmtInt(n: number | string | null | undefined): string {
+    const v = Math.round(Number(n) || 0);
+    return v.toLocaleString('en-IN');
+  }
 }
