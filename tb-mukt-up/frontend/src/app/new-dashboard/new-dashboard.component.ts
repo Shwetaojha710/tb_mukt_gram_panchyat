@@ -61,6 +61,8 @@ const GROUP_COLUMNS: NdColumn[] = [
   num('eligibleGps', 'Eligible GPs'),
   num('qualifiedGps', 'Qualified GPs'),
   { key: 'qualifiedPct', label: '% Qualified', type: 'pct' },
+  num('tests', 'Presumptive tests'),
+  num('testsPrevYear', 'Prev. year tests'),
   num('pendingAbove50', 'Pending Above 50'),
   num('zeroCaseGps', '0-Case GPs'),
   num('zeroCasePendingGps', '0-Case GPs but test pending'),
@@ -77,6 +79,8 @@ const DRILL_COLUMNS: Record<NdLevel, NdColumn[]> = {
   block: [
     { key: 'name', label: 'GP name' },
     num('population', 'Population'),
+    num('tests', 'Presumptive tests'),
+    num('testsPrevYear', 'Prev. year tests'),
     { key: 'eligible', label: 'Eligible', type: 'yesno' },
     { key: 'qualified', label: 'Qualified', type: 'yesno' },
     num('testsPending', 'No. of tests pending to qualify'),
@@ -324,66 +328,89 @@ export class NewDashboardComponent implements OnInit {
     const k = s.kpis;
     const v = (key: string) => ndFormat(k[key]);
     const reporting = `${v('reportingGps')} GPs reporting`;
+    // Order: Bronze → Silver → Gold (as requested)
     const medals: NdKpi[] = [
-      { label: 'Gold GPs', value: v('goldGps'), tone: 'gold' },
-      { label: 'Silver GPs', value: v('silverGps'), tone: 'silver' },
       { label: 'Bronze GPs', value: v('bronzeGps'), tone: 'bronze' },
+      { label: 'Silver GPs', value: v('silverGps'), tone: 'silver' },
+      { label: 'Gold GPs', value: v('goldGps'), tone: 'gold' },
     ];
-    const above50: NdKpi = { label: 'Pending Above 50', value: v('pendingAbove50'), tone: 'warn', sub: 'GPs · tests pending' };
-    const qualified: NdKpi = { label: 'GPs Qualified (YTD)', value: v('qualifiedGps'), tone: 'ok', sub: reporting };
-    const followUps: NdKpi[] = [
-      { label: 'GPs with 0 Cases till date', value: v('zeroCaseGps') },
-      { label: 'GPs with 0 Cases but tests pending', value: v('zeroCasePendingGps'), tone: 'warn' },
-      { label: 'GPs with Poshan Potli Pending', value: v('poshanPendingGps'), tone: 'warn' },
-    ];
+    const below50Value =
+      k['pendingBelow50'] != null
+        ? v('pendingBelow50')
+        : ndFormat(
+            s.buckets
+              .filter((b) => b.bucket !== 'None' && b.bucket !== 'Above 50')
+              .reduce((sum, b) => sum + b.count, 0)
+          );
+    const below50: NdKpi = {
+      label: 'Tests Pending Below 50',
+      value: below50Value,
+      tone: 'warn',
+      sub: 'GPs · 1–50 tests pending',
+    };
+    const above50: NdKpi = {
+      label: 'Tests Pending Above 50',
+      value: v('pendingAbove50'),
+      tone: 'warn',
+      sub: 'GPs · >50 tests pending',
+    };
+    const qualified: NdKpi = {
+      label: 'GPs Qualified',
+      value: v('qualifiedGps'),
+      tone: 'ok',
+      sub: reporting,
+    };
+    const eligible: NdKpi = {
+      label: 'Total Eligible GPs',
+      value: v('eligibleGps'),
+      sub: '≤1 case per 1,000 population',
+    };
+    const zeroCase: NdKpi = { label: 'GPs with 0 Cases', value: v('zeroCaseGps') };
+    const zeroCasePending: NdKpi = {
+      label: 'GPs with 0 Cases but tests pending',
+      value: v('zeroCasePendingGps'),
+      tone: 'warn',
+    };
+    const poshanPending: NdKpi = {
+      label: 'Poshan Potli Pending',
+      value: v('poshanPendingGps'),
+      tone: 'warn',
+    };
 
+    // Exact sequence from TBMP Issues: 1–13 (no District medal cards)
     if (s.level === 'state') {
-      const below50 = s.buckets
-        .filter((b) => b.bucket !== 'None' && b.bucket !== 'Above 50')
-        .reduce((sum, b) => sum + b.count, 0);
       this.kpiRows = [
         [
           { label: 'Total Districts', value: v('totalDistricts'), sub: `${v('reportingDistricts')} reporting` },
           { label: 'Total Blocks', value: v('totalBlocks'), sub: `${v('reportingBlocks')} reporting` },
-          { label: 'Total GPs (in view)', value: v('totalGps'), sub: reporting },
-          qualified,
+          { label: 'Total GPs', value: v('totalGps'), sub: reporting },
+          eligible,
         ],
-        [...medals, { label: 'Tests Pending Below 50', value: ndFormat(below50), sub: 'GPs · 1–50 tests pending' }],
-        [
-          { label: 'Districts with Gold GPs', value: v('districtsWithGold'), tone: 'gold' },
-          { label: 'Districts with Silver GPs', value: v('districtsWithSilver'), tone: 'silver' },
-          { label: 'Districts with Bronze GPs', value: v('districtsWithBronze'), tone: 'bronze' },
-          ...followUps,
-        ],
+        [qualified, ...medals],
+        [below50, above50, zeroCase, zeroCasePending],
+        [poshanPending],
       ];
     } else if (s.level === 'district') {
       this.kpiRows = [
         [
           { label: 'Total Blocks', value: v('totalBlocks'), sub: `${v('reportingBlocks')} reporting` },
           { label: 'Total GPs', value: v('totalGps'), sub: reporting },
-          { label: 'Eligible GPs', value: v('eligibleGps'), sub: '≤1 case per 1,000 population' },
+          eligible,
           qualified,
         ],
-        [...medals, above50],
-        [
-          { label: 'Blocks with Gold GPs', value: v('blocksWithGold'), tone: 'gold' },
-          { label: 'Blocks with Silver GPs', value: v('blocksWithSilver'), tone: 'silver' },
-          { label: 'Blocks with Bronze GPs', value: v('blocksWithBronze'), tone: 'bronze' },
-          ...followUps,
-        ],
+        [...medals, below50],
+        [above50, zeroCase, zeroCasePending, poshanPending],
       ];
     } else {
       this.kpiRows = [
         [
-          { ...qualified, label: 'GPs qualified (YTD)' },
-          ...medals,
-          { ...above50, label: 'Pending above 50' },
+          { label: 'Total GPs', value: v('totalGps'), sub: reporting },
+          eligible,
+          qualified,
+          ...medals.slice(0, 1),
         ],
-        [
-          { label: 'Total GPs (in view)', value: v('totalGps'), sub: reporting },
-          { label: 'Eligible GPs', value: v('eligibleGps'), sub: '≤1 case per 1,000 population' },
-          ...followUps,
-        ],
+        [...medals.slice(1), below50, above50],
+        [zeroCase, zeroCasePending, poshanPending],
       ];
     }
 

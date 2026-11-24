@@ -99,6 +99,14 @@
         <span>Pending above 50</span>
         <strong>{{ fmt(s.kpis.bucketAbove50) }}</strong>
       </div>
+      <div class="stat-card">
+        <span>Presumptive tests (YTD)</span>
+        <strong>{{ fmt(s.kpis.testedNaatYtd) }}</strong>
+      </div>
+      <div class="stat-card">
+        <span>Prev. year tests (YTD)</span>
+        <strong>{{ fmt(s.kpis.testedNaatPrevYtd) }}</strong>
+      </div>
     </div>
 
     <div class="panel">
@@ -124,6 +132,12 @@
         <span class="medal silver">Silver</span>
         <span class="medal gold">Gold</span>
       </div>
+      <p class="subhint criteria-note">
+        <strong>Inclusion:</strong> detection ≤1 case / 1,000 population; Poshan Potli received = 100% of consented.
+        <strong>Also required for TB Entry Qualified:</strong> testing rate ≥30/1,000; previous-year treatment success ≥92%.
+        <strong>Not counted:</strong> DRAFT entries; NULL treatment-success % fails the Tx criterion.
+        Testing totals: SUBMITTED only (Lab &amp; NAAT). Previous-year tests matched by GP ID. Prev-year Tx % is prior-year cohort only.
+      </p>
 
       <div class="table-responsive wide-table">
         <table class="table table-hover align-middle data-table sticky-head sticky-cols state-cols">
@@ -141,6 +155,14 @@
                   <span class="th-period">{{ selectedPeriodShort }}</span>
                   <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
                   <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Presumptive TB Tests (Previous year)</span>
+                  <span class="th-period">Same month: {{ prevYearPeriodShort }}</span>
+                  <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
+                  <span class="th-tag">Prev. year</span>
                 </div>
               </th>
               <th class="group-m th-stack-col">
@@ -171,6 +193,14 @@
                   <span class="th-period">{{ ytdPeriodShort }}</span>
                   <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
                   <span class="th-tag">YTD</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Presumptive TB Tests (Previous year)</span>
+                  <span class="th-period">Same YTD window: {{ prevYearPeriodShort }}</span>
+                  <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
+                  <span class="th-tag">Prev. year</span>
                 </div>
               </th>
               <th class="group-y th-stack-col">
@@ -227,10 +257,12 @@
               <td class="num">{{ fmt(r.gpPopulation) }}</td>
               <td>{{ r.tbUnitName || 'N/A' }}</td>
               <td class="num group-m">{{ fmt(r.testedNaatMonth) }}</td>
+              <td class="num group-m">{{ fmt(r.testedNaatPrevMonth) }}</td>
               <td class="num group-m">{{ fmt(r.diagnosedMonth) }}</td>
               <td class="num group-m">{{ fmt(r.treatmentOver90Month) }}</td>
               <td class="num group-m">{{ fmt(r.poshanReceivedMonth) }}</td>
               <td class="num group-y">{{ fmt(r.testedNaatYtd) }}</td>
+              <td class="num group-y">{{ fmt(r.testedNaatPrevYtd) }}</td>
               <td class="num group-y">{{ fmt(r.diagnosedYtd) }}</td>
               <td class="num group-y">{{ fmt(r.treatmentOver90Ytd) }}</td>
               <td class="num group-y">{{ fmt(r.poshanReceivedYtd) }}</td>
@@ -246,7 +278,7 @@
               <td><span class="medal" [ngClass]="medalClass(r.previousMedal)">{{ r.previousMedal || 'NONE' }}</span></td>
             </tr>
             <tr *ngIf="!(rankings?.tbUnitGpLineList || []).length">
-              <td colspan="20" class="text-muted text-center py-5">No rows for selected filters. Adjust filters and Apply.</td>
+              <td colspan="22" class="text-muted text-center py-5">No rows for selected filters. Adjust filters and Apply.</td>
             </tr>
           </tbody>
         </table>
@@ -330,6 +362,14 @@
         <span>Pending above 50</span>
         <strong>{{ fmt(s.kpis.bucketAbove50) }}</strong>
       </div>
+      <div class="stat-card">
+        <span>Presumptive tests (YTD)</span>
+        <strong>{{ fmt(s.kpis.testedNaatYtd) }}</strong>
+      </div>
+      <div class="stat-card">
+        <span>Prev. year tests (YTD)</span>
+        <strong>{{ fmt(s.kpis.testedNaatPrevYtd) }}</strong>
+      </div>
     </div>
 
     <div class="panel">
@@ -357,6 +397,12 @@
         <span class="medal silver">Silver</span>
         <span class="medal gold">Gold</span>
       </div>
+      <p class="subhint criteria-note">
+        <strong>Inclusion:</strong> detection ≤1 case / 1,000 population; Poshan Potli received = 100% of consented.
+        <strong>Also required for TB Entry Qualified:</strong> testing rate ≥30/1,000; previous-year treatment success ≥92%.
+        <strong>Not counted:</strong> DRAFT entries; NULL treatment-success % fails the Tx criterion.
+        Testing totals: SUBMITTED only (Lab &amp; NAAT). Previous-year tests matched by GP ID. Prev-year Tx % is prior-year cohort only.
+      </p>
 
       <div class="table-responsive wide-table">
         <table class="table table-hover align-middle data-table sticky-head sticky-cols district-cols">
@@ -374,6 +420,14 @@
                   <span class="th-period">{{ selectedPeriodShort }}</span>
                   <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
                   <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Presumptive TB Tests (Previous year)</span>
+                  <span class="th-period">Same month: {{ prevYearPeriodShort }}</span>
+                  <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
+                  <span class="th-tag">Prev. year</span>
                 </div>
               </th>
               <th class="group-m th-stack-col">
@@ -404,6 +458,14 @@
                   <span class="th-period">{{ ytdPeriodShort }}</span>
                   <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
                   <span class="th-tag">YTD</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Presumptive TB Tests (Previous year)</span>
+                  <span class="th-period">Same YTD window: {{ prevYearPeriodShort }}</span>
+                  <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
+                  <span class="th-tag">Prev. year</span>
                 </div>
               </th>
               <th class="group-y th-stack-col">
@@ -459,10 +521,12 @@
               <td class="num">{{ fmt(r.gpPopulation) }}</td>
               <td>{{ r.tbUnitName || 'N/A' }}</td>
               <td class="num group-m">{{ fmt(r.testedNaatMonth) }}</td>
+              <td class="num group-m">{{ fmt(r.testedNaatPrevMonth) }}</td>
               <td class="num group-m">{{ fmt(r.diagnosedMonth) }}</td>
               <td class="num group-m">{{ fmt(r.treatmentOver90Month) }}</td>
               <td class="num group-m">{{ fmt(r.poshanReceivedMonth) }}</td>
               <td class="num group-y">{{ fmt(r.testedNaatYtd) }}</td>
+              <td class="num group-y">{{ fmt(r.testedNaatPrevYtd) }}</td>
               <td class="num group-y">{{ fmt(r.diagnosedYtd) }}</td>
               <td class="num group-y">{{ fmt(r.treatmentOver90Ytd) }}</td>
               <td class="num group-y">{{ fmt(r.poshanReceivedYtd) }}</td>
@@ -562,6 +626,14 @@
         <span>Pending above 50</span>
         <strong>{{ fmt(s.kpis.bucketAbove50) }}</strong>
       </div>
+      <div class="stat-card">
+        <span>Presumptive tests (YTD)</span>
+        <strong>{{ fmt(s.kpis.testedNaatYtd) }}</strong>
+      </div>
+      <div class="stat-card">
+        <span>Prev. year tests (YTD)</span>
+        <strong>{{ fmt(s.kpis.testedNaatPrevYtd) }}</strong>
+      </div>
     </div>
 
     <div class="panel">
@@ -587,6 +659,12 @@
         <span class="medal silver">Silver</span>
         <span class="medal gold">Gold</span>
       </div>
+      <p class="subhint criteria-note">
+        <strong>Inclusion:</strong> detection ≤1 case / 1,000 population; Poshan Potli received = 100% of consented.
+        <strong>Also required for TB Entry Qualified:</strong> testing rate ≥30/1,000; previous-year treatment success ≥92%.
+        <strong>Not counted:</strong> DRAFT entries; NULL treatment-success % fails the Tx criterion.
+        Testing totals: SUBMITTED only (Lab &amp; NAAT). Previous-year tests matched by GP ID. Prev-year Tx % is prior-year cohort only.
+      </p>
 
       <div class="table-responsive wide-table">
         <table class="table table-hover align-middle data-table sticky-head sticky-cols block-cols">
@@ -601,6 +679,14 @@
                   <span class="th-period">{{ selectedPeriodShort }}</span>
                   <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
                   <span class="th-tag">Month</span>
+                </div>
+              </th>
+              <th class="group-m th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Presumptive TB Tests (Previous year)</span>
+                  <span class="th-period">Same month: {{ prevYearPeriodShort }}</span>
+                  <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
+                  <span class="th-tag">Prev. year</span>
                 </div>
               </th>
               <th class="group-m th-stack-col">
@@ -631,6 +717,14 @@
                   <span class="th-period">{{ ytdPeriodShort }}</span>
                   <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
                   <span class="th-tag">YTD</span>
+                </div>
+              </th>
+              <th class="group-y th-stack-col">
+                <div class="th-stack">
+                  <span class="th-main">Presumptive TB Tests (Previous year)</span>
+                  <span class="th-period">Same YTD window: {{ prevYearPeriodShort }}</span>
+                  <span class="th-meta">(Lab Register &amp; NAAT Register)</span>
+                  <span class="th-tag">Prev. year</span>
                 </div>
               </th>
               <th class="group-y th-stack-col">
@@ -674,10 +768,12 @@
               <td class="num">{{ fmt(r.gpPopulation) }}</td>
               <td>{{ r.tbUnitName || 'N/A' }}</td>
               <td class="num group-m">{{ fmt(r.testedNaatMonth) }}</td>
+              <td class="num group-m">{{ fmt(r.testedNaatPrevMonth) }}</td>
               <td class="num group-m">{{ fmt(r.diagnosedMonth) }}</td>
               <td class="num group-m">{{ fmt(r.treatmentOver90Month) }}</td>
               <td class="num group-m">{{ fmt(r.poshanReceivedMonth) }}</td>
               <td class="num group-y">{{ fmt(r.testedNaatYtd) }}</td>
+              <td class="num group-y">{{ fmt(r.testedNaatPrevYtd) }}</td>
               <td class="num group-y">{{ fmt(r.diagnosedYtd) }}</td>
               <td class="num group-y">{{ fmt(r.treatmentOver90Ytd) }}</td>
               <td class="num group-y">{{ fmt(r.poshanReceivedYtd) }}</td>
@@ -693,7 +789,7 @@
               <td><span class="medal" [ngClass]="medalClass(r.previousMedal)">{{ r.previousMedal || 'NONE' }}</span></td>
             </tr>
             <tr *ngIf="!(rankings?.tbUnitGpLineList || []).length">
-              <td colspan="17" class="text-muted text-center py-5">No rows for selected filters. Adjust GP and Apply.</td>
+              <td colspan="19" class="text-muted text-center py-5">No rows for selected filters. Adjust GP and Apply.</td>
             </tr>
           </tbody>
         </table>

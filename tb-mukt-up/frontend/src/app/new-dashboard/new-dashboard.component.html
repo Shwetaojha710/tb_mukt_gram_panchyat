@@ -94,10 +94,20 @@
       <app-nd-kpi-cards *ngFor="let row of kpiRows" [cards]="row"></app-nd-kpi-cards>
       <div class="panel notes">
         <ul>
-          <li><strong>Eligible</strong> = at most 1 TB case per 1,000 population in the selected period.</li>
           <li>
-            <strong>Qualified</strong> = Eligible <em>and</em> at least 30 presumptive tests per 1,000 population
-            completed till date.
+            <strong>Inclusion (Eligible card):</strong> zero or one TB case per 1,000 population in the selected period.
+          </li>
+          <li>
+            <strong>Overview Qualified card:</strong> Eligible <em>and</em> presumptive tests completed ≥ 30 per 1,000 population
+            (target = population × 30 / 1000). DRAFT entries are excluded from totals.
+          </li>
+          <li>
+            <strong>Awards (Bronze / Silver / Gold):</strong> from yearly qualification history (TB Entry indicators:
+            testing ≥30/1000, detection ≤1/1000, previous-year treatment success ≥92%, Poshan = 100% of consented).
+          </li>
+          <li>
+            <strong>Testing totals</strong> = SUM of presumptive tests from <em>SUBMITTED</em> TB entries only
+            (Lab Register &amp; NAAT Register). Previous-year tests use the same From–To months shifted back one year, matched by GP ID.
           </li>
           <li *ngIf="level !== 'block'">
             Click a {{ childLabel }} in the table below to open its overview (filters update automatically).
