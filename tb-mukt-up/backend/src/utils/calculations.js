@@ -57,7 +57,7 @@ function computeIndicators(input) {
     indicator4,
     qualified,
     overallTarget: round(overallTarget, 2),
-    testingPending: round(testingPending, 2),
+    testingPending: round(testingPending, 0),
     poshanPending: round(poshanPending, 2),
   };
 }

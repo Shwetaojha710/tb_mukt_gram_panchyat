@@ -192,7 +192,10 @@ function buildGpCte(ctx) {
       SELECT
         c.*,
         CASE WHEN c.eligible = 1 AND c.tests >= c.target THEN 1 ELSE 0 END AS qualified,
-        CASE WHEN c.target > c.tests THEN c.target - c.tests ELSE 0 END AS tests_pending
+        CASE
+          WHEN c.target > c.tests THEN CAST(ROUND(c.target - c.tests, 0) AS INT)
+          ELSE 0
+        END AS tests_pending
       FROM calc c
     )`;
 
@@ -635,7 +638,7 @@ async function exportWorkbook(user, filters = {}) {
         Number(r.eligible) ? 'Yes' : 'No',
         Number(r.qualified) ? 'Yes' : 'No',
         r.award || '',
-        r.testsPending,
+        Math.round(Number(r.testsPending) || 0),
         r.bucket,
         Number(r.zeroCase) ? 'Yes' : 'No',
         Number(r.zeroCasePending) ? 'Yes' : 'No',
@@ -704,7 +707,7 @@ async function exportWorkbook(user, filters = {}) {
     r.population,
     r.tests,
     r.cases,
-    r.testsPending,
+    Math.round(Number(r.testsPending) || 0),
     r.bucket,
     r.consented,
     r.poshanPending,

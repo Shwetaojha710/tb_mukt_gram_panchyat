@@ -681,7 +681,7 @@ async function exportWorkbook(user, filters) {
       r.diagnosedYtd,
       r.treatmentOver90Ytd,
       r.poshanReceivedYtd,
-      r.testingPendingYtd,
+      Math.round(Number(r.testingPendingYtd) || 0),
       r.testingPendingBucket,
       r.poshanPendingYtd,
       Number(r.isQualified) ? 'Yes' : 'No',
@@ -710,17 +710,18 @@ async function exportWorkbook(user, filters) {
 
   const rankSheet = workbook.addWorksheet('Rankings');
   rankSheet.addRow(['Rank Type', 'Name', 'Qualified GPs', 'Total GPs', 'Testing Pending']);
+  const pendingInt = (v) => Math.round(Number(v) || 0);
   (rankings.top10Districts || []).forEach((r) =>
-    rankSheet.addRow(['Top 10 Districts (least pending)', r.districtName, r.qualifiedGps, r.totalGps, r.testingPending])
+    rankSheet.addRow(['Top 10 Districts (least pending)', r.districtName, r.qualifiedGps, r.totalGps, pendingInt(r.testingPending)])
   );
   (rankings.bottom10Districts || []).forEach((r) =>
-    rankSheet.addRow(['Bottom 10 Districts (most pending)', r.districtName, r.qualifiedGps, r.totalGps, r.testingPending])
+    rankSheet.addRow(['Bottom 10 Districts (most pending)', r.districtName, r.qualifiedGps, r.totalGps, pendingInt(r.testingPending)])
   );
   (rankings.top10Blocks || []).forEach((r) =>
-    rankSheet.addRow(['Top 10 Blocks (least pending)', r.blockName, r.qualifiedGps, r.totalGps, r.testingPending])
+    rankSheet.addRow(['Top 10 Blocks (least pending)', r.blockName, r.qualifiedGps, r.totalGps, pendingInt(r.testingPending)])
   );
   (rankings.bottom10Blocks || []).forEach((r) =>
-    rankSheet.addRow(['Bottom 10 Blocks (most pending)', r.blockName, r.qualifiedGps, r.totalGps, r.testingPending])
+    rankSheet.addRow(['Bottom 10 Blocks (most pending)', r.blockName, r.qualifiedGps, r.totalGps, pendingInt(r.testingPending)])
   );
 
   const buffer = await workbook.xlsx.writeBuffer();

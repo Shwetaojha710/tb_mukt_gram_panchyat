@@ -53,6 +53,7 @@ const AWARD_LABELS: Record<string, string> = {
 };
 
 const num = (key: string, label: string): NdColumn => ({ key, label, type: 'num' });
+const intCol = (key: string, label: string): NdColumn => ({ key, label, type: 'int' });
 
 /** Columns shared by the district-wise and block-wise drilldowns (Excel order). */
 const GROUP_COLUMNS: NdColumn[] = [
@@ -83,7 +84,7 @@ const DRILL_COLUMNS: Record<NdLevel, NdColumn[]> = {
     num('testsPrevYear', 'Prev. year tests'),
     { key: 'eligible', label: 'Eligible', type: 'yesno' },
     { key: 'qualified', label: 'Qualified', type: 'yesno' },
-    num('testsPending', 'No. of tests pending to qualify'),
+    intCol('testsPending', 'No. of tests pending to qualify'),
     { key: 'zeroCase', label: '0-Case GPs', type: 'check' },
     { key: 'zeroCasePending', label: '0-Case GPs but test pending', type: 'check' },
     num('consented', 'Consented for Poshan Potli'),

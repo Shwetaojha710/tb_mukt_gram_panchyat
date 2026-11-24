@@ -25,7 +25,7 @@
         <th
           *ngFor="let c of columns; let first = first"
           [class.col-first]="first"
-          [class.num]="c.type === 'num' || c.type === 'pct'"
+          [class.num]="c.type === 'num' || c.type === 'int' || c.type === 'pct'"
           [class.sortable]="c.sortable !== false"
           [attr.aria-sort]="ariaSort(c)"
         >
@@ -51,10 +51,11 @@
         <td
           *ngFor="let c of columns; let first = first"
           [class.col-first]="first"
-          [class.num]="c.type === 'num' || c.type === 'pct'"
+          [class.num]="c.type === 'num' || c.type === 'int' || c.type === 'pct'"
           [ngSwitch]="c.type || 'text'"
         >
           <ng-container *ngSwitchCase="'num'">{{ fmt(r[c.key]) }}</ng-container>
+          <ng-container *ngSwitchCase="'int'">{{ fmtInt(r[c.key]) }}</ng-container>
           <ng-container *ngSwitchCase="'pct'">{{ fmt(r[c.key]) }}%</ng-container>
           <span *ngSwitchCase="'yesno'" class="yn" [class.yes]="isOn(r[c.key])" [class.no]="!isOn(r[c.key])">
             {{ isOn(r[c.key]) ? 'Yes' : 'No' }}

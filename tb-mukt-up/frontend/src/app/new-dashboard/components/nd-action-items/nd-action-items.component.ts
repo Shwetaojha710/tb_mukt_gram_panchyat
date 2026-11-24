@@ -65,7 +65,7 @@ export class NdActionItemsComponent implements OnChanges {
         BLOCK,
         DISTRICT,
         { key: 'population', label: 'Population', type: 'num' },
-        { key: 'testsPending', label: 'Tests Pending', type: 'num' },
+        { key: 'testsPending', label: 'Tests Pending', type: 'int' },
         { key: 'bucket', label: 'Pendency Bucket', type: 'bucket', sortable: false },
       ]
     ),
@@ -81,7 +81,7 @@ export class NdActionItemsComponent implements OnChanges {
         DISTRICT,
         { key: 'population', label: 'Population', type: 'num' },
         { key: 'tests', label: 'Tests till the month', type: 'num' },
-        { key: 'testsPending', label: 'Tests Pending', type: 'num' },
+        { key: 'testsPending', label: 'Tests Pending', type: 'int' },
       ]
     ),
     this.createList(

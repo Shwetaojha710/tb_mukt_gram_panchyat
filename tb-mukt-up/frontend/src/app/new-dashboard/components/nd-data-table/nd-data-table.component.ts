@@ -14,7 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { NdColumn, NdTableQuery, ndFormat } from '../../new-dashboard.models';
+import { NdColumn, NdTableQuery, ndFormat, ndFormatInt } from '../../new-dashboard.models';
 
 /**
  * Table with search, sorting and pagination.
@@ -130,6 +130,7 @@ export class NdDataTableComponent implements OnInit, OnChanges {
   }
 
   fmt = ndFormat;
+  fmtInt = ndFormatInt;
 
   onExport() {
     if (this.serverSide) {
@@ -156,6 +157,7 @@ export class NdDataTableComponent implements OnInit, OnChanges {
   private csvValue(row: any, col: NdColumn): unknown {
     const v = row[col.key];
     if (col.type === 'yesno' || col.type === 'check') return this.isOn(v) ? 'Yes' : 'No';
+    if (col.type === 'int') return Math.round(Number(v) || 0);
     return v;
   }
 

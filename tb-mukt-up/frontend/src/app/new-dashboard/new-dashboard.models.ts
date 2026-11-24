@@ -72,7 +72,7 @@ export interface NdKpi {
   tone?: 'ok' | 'warn' | 'bad' | 'bronze' | 'silver' | 'gold';
 }
 
-export type NdCellType = 'text' | 'num' | 'pct' | 'yesno' | 'check' | 'bucket';
+export type NdCellType = 'text' | 'num' | 'int' | 'pct' | 'yesno' | 'check' | 'bucket';
 
 export interface NdColumn {
   key: string;
@@ -93,6 +93,11 @@ export const ND_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'
 
 export function ndFormat(n: number | string | null | undefined): string {
   return (Number(n) || 0).toLocaleString('en-IN', { maximumFractionDigits: 1 });
+}
+
+/** Whole numbers (e.g. tests pending). */
+export function ndFormatInt(n: number | string | null | undefined): string {
+  return Math.round(Number(n) || 0).toLocaleString('en-IN');
 }
 
 /** Message + kind for the page-level error state. */
