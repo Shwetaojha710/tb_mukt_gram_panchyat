@@ -452,6 +452,8 @@ export class TbEntryComponent implements OnInit {
       this.location.gpId === next.gpId &&
       this.location.villageId === next.villageId;
 
+    const gpChanged = this.location.gpId !== next.gpId;
+
     // Always sync location from emit (copy), then refresh if GP/village present
     this.location = { ...next };
 
@@ -459,6 +461,14 @@ export class TbEntryComponent implements OnInit {
       // Mutation pehle hi IDs sync kar chuki thi — context phir bhi load karo
       if (this.location.gpId) this.refreshContext();
       return;
+    }
+
+    // Switching GP/village for a new entry must not carry prior metric values
+    if (gpChanged && !this.isEditMode) {
+      this.clearMetricFields();
+      this.entryId = null;
+      this.duplicateEntry = false;
+      this.duplicateStatus = null;
     }
 
     this.refreshContext();
@@ -470,6 +480,60 @@ export class TbEntryComponent implements OnInit {
       this.context = { ...this.context, gpName: gp.name, gpPopulation: gp.population || 0 };
       this.refreshContext(); // add this
     }
+  }
+
+  /** Clear TB metric inputs only (keep reporting period + location). */
+  private clearMetricFields() {
+    this.form.patchValue(
+      {
+        testedNaat: null,
+        tbDiagnosed: null,
+        prevYearSuccessTreatment: null,
+        poshanEligible: null,
+        poshanConsented: null,
+        poshanReceived: null,
+      },
+      { emitEvent: false }
+    );
+    [
+      'testedNaat',
+      'tbDiagnosed',
+      'prevYearSuccessTreatment',
+      'poshanEligible',
+      'poshanConsented',
+      'poshanReceived',
+    ].forEach((name) => {
+      this.form.get(name)?.markAsPristine();
+      this.form.get(name)?.markAsUntouched();
+      this.form.get(name)?.setErrors(null);
+    });
+  }
+
+  /** After successful create: keep district/block, unlock next GP, clear metrics. */
+  private prepareNextEntry() {
+    this.entryId = null;
+    this.isEditMode = false;
+    this.duplicateEntry = false;
+    this.duplicateStatus = null;
+    this.lockGp = false;
+    this.lockVillage = false;
+    this.location = {
+      ...this.location,
+      gpId: null,
+      villageId: null,
+    };
+    this.context = {
+      ...this.context,
+      gpName: null,
+      gpPopulation: null,
+      villageName: null,
+      villagePopulation: null,
+      tbUnitId: null,
+      tbUnitName: null,
+    };
+    this.tbUnits = [];
+    this.selectedTbUnitId = null;
+    this.clearMetricFields();
   }
 
   refreshContext() {
@@ -726,9 +790,15 @@ export class TbEntryComponent implements OnInit {
         this.entryId = res.data?.entry?.id ?? this.entryId;
         this.duplicateEntry = false;
         this.notify.success(res.message);
-        this.router.navigate(['/tb-entries']);
+        if (this.isEditMode) {
+          this.router.navigate(['/tb-entries']);
+          return;
+        }
+        // Stay on form for continuous entry: clear metrics + GP for the next row.
+        this.prepareNextEntry();
       },
       error: (err) => {
+        // Preserve entered data on API failure
         this.loading = false;
         this.notify.fromHttpError(err);
       },

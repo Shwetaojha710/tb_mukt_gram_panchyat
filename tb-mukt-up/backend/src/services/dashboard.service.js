@@ -1,6 +1,10 @@
 const ExcelJS = require('exceljs');
 const { query } = require('../config/db');
 const { AppError } = require('../middleware/errorHandler');
+const { TREATMENT_SUCCESS_MIN_PCT } = require('../utils/calculations');
+
+/** SQL predicate: previous-year Tx success meets central threshold (NULL does not qualify). */
+const TX_SUCCESS_MET_SQL = `e.treatment_success_pct IS NOT NULL AND e.treatment_success_pct >= ${Number(TREATMENT_SUCCESS_MIN_PCT)}`;
 
 function parseYearMonth(dateText) {
   if (!dateText) return null;
@@ -43,7 +47,7 @@ function applyScope(user, filters = {}) {
     where.push('e.district_id = @scopeDistrictId');
     params.scopeDistrictId = user.districtId;
   }
-  // Tehsil list comes from dbo.Block â€” same as Overview / TB Entry List: always scope by block_id
+  // Tehsil list comes from dbo.Block — same as Overview / TB Entry List: always scope by block_id
   if ((user.role === 'TEHSIL' || user.role === 'BLOCK') && (user.blockId || user.tehsilId)) {
     where.push('e.block_id = @scopeBlockId');
     params.scopeBlockId = user.blockId || user.tehsilId;
@@ -139,7 +143,7 @@ async function getSummary(user, filters) {
       COUNT(DISTINCT e.gp_id) AS totalGps,
       ISNULL(SUM(e.tested_naat), 0) AS testedNaatMonth,
       ISNULL(SUM(e.tb_diagnosed), 0) AS diagnosedMonth,
-      ISNULL(SUM(CASE WHEN ISNULL(e.treatment_success_pct, 0) > 90 THEN 1 ELSE 0 END), 0) AS treatmentOver90Month,
+      ISNULL(SUM(CASE WHEN ${TX_SUCCESS_MET_SQL} THEN 1 ELSE 0 END), 0) AS treatmentOver90Month,
       ISNULL(SUM(e.poshan_received), 0) AS poshanReceivedMonth,
       ISNULL(SUM(e.poshan_eligible), 0) AS poshanEligibleMonth
     FROM dbo.tb_mukt_entries e
@@ -155,7 +159,7 @@ async function getSummary(user, filters) {
     SELECT
       ISNULL(SUM(e.tested_naat), 0) AS testedNaatYtd,
       ISNULL(SUM(e.tb_diagnosed), 0) AS diagnosedYtd,
-      ISNULL(SUM(CASE WHEN ISNULL(e.treatment_success_pct, 0) > 90 THEN 1 ELSE 0 END), 0) AS treatmentOver90Ytd,
+      ISNULL(SUM(CASE WHEN ${TX_SUCCESS_MET_SQL} THEN 1 ELSE 0 END), 0) AS treatmentOver90Ytd,
       ISNULL(SUM(e.poshan_received), 0) AS poshanReceivedYtd,
       ISNULL(SUM(e.poshan_eligible), 0) AS poshanEligibleYtd,
       ISNULL(SUM(e.testing_pending), 0) AS testingPendingYtd,
@@ -180,7 +184,7 @@ async function getSummary(user, filters) {
       ISNULL(SUM(e.tested_naat), 0) AS testingCompleted,
       ISNULL(SUM(e.tb_diagnosed), 0) AS diagnosedTotal,
       ISNULL(SUM(e.prev_year_success_treatment), 0) AS previousYearTxSuccessCount,
-      ISNULL(SUM(CASE WHEN ISNULL(e.treatment_success_pct, 0) > 90 THEN 1 ELSE 0 END), 0) AS treatmentOver90Gps,
+      ISNULL(SUM(CASE WHEN ${TX_SUCCESS_MET_SQL} THEN 1 ELSE 0 END), 0) AS treatmentOver90Gps,
       ISNULL(SUM(e.poshan_received), 0) AS poshanReceivedTotal,
       ISNULL(SUM(e.poshan_eligible), 0) AS poshanEligibleTotal,
       ISNULL(SUM(e.testing_pending), 0) AS testingPending,
@@ -279,7 +283,7 @@ async function getSummary(user, filters) {
       ISNULL(SUM(e.tested_naat), 0) AS tested,
       ISNULL(SUM(e.tb_diagnosed), 0) AS diagnosed,
       ISNULL(SUM(e.prev_year_success_treatment), 0) AS previousYearTxSuccessCount,
-      ISNULL(SUM(CASE WHEN ISNULL(e.treatment_success_pct, 0) > 90 THEN 1 ELSE 0 END), 0) AS treatmentOver90Gps,
+      ISNULL(SUM(CASE WHEN ${TX_SUCCESS_MET_SQL} THEN 1 ELSE 0 END), 0) AS treatmentOver90Gps,
       ISNULL(SUM(e.poshan_received), 0) AS poshanReceived,
       ISNULL(SUM(e.poshan_eligible), 0) AS poshanEligible,
       ISNULL(SUM(e.overall_target), 0) AS target,
@@ -325,6 +329,20 @@ async function getSummary(user, filters) {
     baseParams
   );
 
+  // Previous-year testing volume (same month / Jan–To window), matched by GP scope only.
+  // Does not change eligibility or treatment-success logic.
+  const previousYearTesting = await query(
+    `
+    SELECT
+      ISNULL(SUM(CASE WHEN e.reporting_month = @reportingMonth THEN e.tested_naat ELSE 0 END), 0) AS testedNaatPrevMonth,
+      ISNULL(SUM(CASE WHEN e.reporting_month BETWEEN 1 AND @reportingMonth THEN e.tested_naat ELSE 0 END), 0) AS testedNaatPrevYtd
+    FROM dbo.tb_mukt_entries e
+    WHERE ${baseWhere}
+      AND e.reporting_year = @prevYear
+    `,
+    baseParams
+  );
+
   return {
     reportingMonth,
     year,
@@ -335,6 +353,7 @@ async function getSummary(user, filters) {
       ...previousYearMedals.recordset[0],
       ...monthKpi.recordset[0],
       ...ytdKpi.recordset[0],
+      ...previousYearTesting.recordset[0],
       ...districtMedalPerformance.recordset[0],
       ...blockMedalPerformance.recordset[0],
     },
@@ -479,10 +498,12 @@ async function getRankings(user, filters) {
       MAX(e.village_population) AS villagePopulation,
       ISNULL(NULLIF(MAX(e.tb_unit_name), ''), 'N/A') AS tbUnitName,
       ISNULL(SUM(CASE WHEN e.reporting_month = @reportingMonth THEN e.tested_naat ELSE 0 END), 0) AS testedNaatMonth,
+      ISNULL(MAX(prevt.testedNaatPrevMonth), 0) AS testedNaatPrevMonth,
       ISNULL(SUM(CASE WHEN e.reporting_month = @reportingMonth THEN e.tb_diagnosed ELSE 0 END), 0) AS diagnosedMonth,
       ISNULL(SUM(CASE WHEN e.reporting_month = @reportingMonth THEN e.prev_year_success_treatment ELSE 0 END), 0) AS treatmentOver90Month,
       ISNULL(SUM(CASE WHEN e.reporting_month = @reportingMonth THEN e.poshan_received ELSE 0 END), 0) AS poshanReceivedMonth,
       ISNULL(SUM(CASE WHEN e.reporting_month BETWEEN 1 AND @reportingMonth THEN e.tested_naat ELSE 0 END), 0) AS testedNaatYtd,
+      ISNULL(MAX(prevt.testedNaatPrevYtd), 0) AS testedNaatPrevYtd,
       ISNULL(SUM(CASE WHEN e.reporting_month BETWEEN 1 AND @reportingMonth THEN e.tb_diagnosed ELSE 0 END), 0) AS diagnosedYtd,
       ISNULL(SUM(CASE WHEN e.reporting_month BETWEEN 1 AND @reportingMonth THEN e.prev_year_success_treatment ELSE 0 END), 0) AS treatmentOver90Ytd,
       ISNULL(SUM(CASE WHEN e.reporting_month BETWEEN 1 AND @reportingMonth THEN e.poshan_received ELSE 0 END), 0) AS poshanReceivedYtd,
@@ -511,6 +532,16 @@ async function getRankings(user, filters) {
       ON q.gp_id = e.gp_id AND q.year = @qYear
     LEFT JOIN dbo.tb_mukt_qualification_history pq
       ON pq.gp_id = e.gp_id AND pq.year = @prevYear
+    LEFT JOIN (
+      SELECT
+        p.gp_id,
+        ISNULL(SUM(CASE WHEN p.reporting_month = @reportingMonth THEN p.tested_naat ELSE 0 END), 0) AS testedNaatPrevMonth,
+        ISNULL(SUM(CASE WHEN p.reporting_month BETWEEN 1 AND @reportingMonth THEN p.tested_naat ELSE 0 END), 0) AS testedNaatPrevYtd
+      FROM dbo.tb_mukt_entries p
+      WHERE p.status = 'SUBMITTED'
+        AND p.reporting_year = @prevYear
+      GROUP BY p.gp_id
+    ) prevt ON prevt.gp_id = e.gp_id
     WHERE ${lineWhere} AND e.reporting_year = @qYear
     GROUP BY e.gp_id, e.tb_unit_name
     ORDER BY MAX(e.district_name), MAX(e.block_name), MAX(e.gp_name), e.tb_unit_name
@@ -613,16 +644,18 @@ async function exportWorkbook(user, filters) {
     'GP Population',
     'TB Unit Name',
     'Presumptive tested NAAT (Reporting month)',
+    'Presumptive tested NAAT (Previous year, same month)',
     'TB diagnosed among tested (Reporting month)',
-    'Prev-year Tx success >90% (Reporting month)',
+    'Prev-year Tx success >=92% (Reporting month)',
     'Poshan Potli received (Reporting month)',
-    'Presumptive tested NAAT (Janâ€“reporting month)',
-    'TB diagnosed among tested (Janâ€“reporting month)',
-    'Prev-year Tx success >90% (Janâ€“reporting month)',
-    'Poshan Potli received (Janâ€“reporting month)',
-    'Testing pending to qualify (Janâ€“reporting month)',
+    'Presumptive tested NAAT (Jan-reporting month)',
+    'Presumptive tested NAAT (Previous year, Jan-same month)',
+    'TB diagnosed among tested (Jan-reporting month)',
+    'Prev-year Tx success >=92% (Jan-reporting month)',
+    'Poshan Potli received (Jan–reporting month)',
+    'Testing pending to qualify (Jan–reporting month)',
     'Testing pending bucket',
-    'Poshan Potli pending (Janâ€“reporting month)',
+    'Poshan Potli pending (Jan–reporting month)',
     'GP qualified (Yes/No)',
     'Current Status (Bronze/Silver/Gold)',
     'Previous year status (Bronze/Silver/Gold)',
@@ -639,10 +672,12 @@ async function exportWorkbook(user, filters) {
       r.gpPopulation,
       r.tbUnitName,
       r.testedNaatMonth,
+      r.testedNaatPrevMonth,
       r.diagnosedMonth,
       r.treatmentOver90Month,
       r.poshanReceivedMonth,
       r.testedNaatYtd,
+      r.testedNaatPrevYtd,
       r.diagnosedYtd,
       r.treatmentOver90Ytd,
       r.poshanReceivedYtd,
@@ -657,7 +692,7 @@ async function exportWorkbook(user, filters) {
 
   const summarySheet = workbook.addWorksheet('Summary');
   summarySheet.addRow(['Metric', 'Value']);
-  summarySheet.addRow(['GPs qualified (Janâ€“reporting month)', k.qualifiedGpsYtd]);
+  summarySheet.addRow(['GPs qualified (Jan–reporting month)', k.qualifiedGpsYtd]);
   summarySheet.addRow(['Bronze GPs', k.bronzeGps]);
   summarySheet.addRow(['Silver GPs', k.silverGps]);
   summarySheet.addRow(['Gold GPs', k.goldGps]);

@@ -458,8 +458,10 @@
 .cell-stack {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.1rem;
   min-width: 110px;
+  text-align: center;
 }
 
 .cell-stack strong {
@@ -488,11 +490,13 @@
   white-space: nowrap;
   padding: 0.55rem 0.6rem;
   border-bottom: 1px solid #c5dced;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .data-table thead th.th-stack-col {
   white-space: normal;
-  vertical-align: bottom;
+  vertical-align: middle;
   min-width: 9.5rem;
   max-width: 12rem;
   padding: 0.5rem 0.55rem;
@@ -501,10 +505,10 @@
 .th-stack {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.12rem;
   line-height: 1.25;
-  text-align: left;
+  text-align: center;
 }
 
 .th-stack .th-main {
@@ -547,6 +551,7 @@
   padding: 0.5rem 0.6rem;
   border-bottom: 1px solid #edf3f8;
   background: #fff;
+  text-align: center;
 }
 
 .data-table tbody tr:hover td {
@@ -562,7 +567,7 @@
 
 .data-table td.num {
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  text-align: center;
   white-space: nowrap;
   font-weight: 600;
 }

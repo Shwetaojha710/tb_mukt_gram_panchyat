@@ -1,6 +1,16 @@
 /**
  * TB Mukt GP qualification calculations
+ *
+ * Central thresholds (do not duplicate elsewhere):
+ * - Testing rate >= 30 per 1000 population
+ * - Detection rate <= 1 per 1000 population
+ * - Previous-year treatment success >= 92%
+ * - Poshan Potli received = 100% of consented
  */
+
+/** Minimum previous-year treatment success % for indicator 3 (inclusive). */
+const TREATMENT_SUCCESS_MIN_PCT = 92;
+
 function safeDiv(num, den) {
   if (!den || Number(den) === 0) return 0;
   return Number(num) / Number(den);
@@ -10,7 +20,12 @@ function computeIndicators(input) {
   const gpPopulation = Number(input.gpPopulation) || 0;
   const tested = Number(input.testedNaat) || 0;
   const notified = Number(input.tbDiagnosed) || 0;
-  const treatmentSuccessPct = Number(input.treatmentSuccessPct);
+  // Preserve explicit 0% (e.g. death outcome); only missing/invalid → NaN (fails criterion).
+  const rawTx = input.treatmentSuccessPct;
+  const treatmentSuccessPct =
+    rawTx === null || rawTx === undefined || rawTx === ''
+      ? NaN
+      : Number(rawTx);
   const eligible = Number(input.poshanEligible) || 0;
   const consented = Number(input.poshanConsented ?? input.poshanEligible) || 0;
   const received = Number(input.poshanReceived) || 0;
@@ -21,7 +36,9 @@ function computeIndicators(input) {
 
   const indicator1 = testingRate >= 30;
   const indicator2 = detectionRate <= 1;
-  const indicator3 = !Number.isNaN(treatmentSuccessPct) && treatmentSuccessPct > 90;
+  // Previous-year treatment cohort only — current-year diagnosed cases do not enter this %.
+  const indicator3 =
+    !Number.isNaN(treatmentSuccessPct) && treatmentSuccessPct >= TREATMENT_SUCCESS_MIN_PCT;
   const indicator4 = consented > 0 && Math.abs(poshanPct - 100) < 0.0001;
   const qualified = indicator1 && indicator2 && indicator3 && indicator4;
 
@@ -72,6 +89,7 @@ function computeTreatmentSuccessPct(successfulCompletions, previousYearCases) {
 }
 
 module.exports = {
+  TREATMENT_SUCCESS_MIN_PCT,
   computeIndicators,
   nextMedal,
   computeTreatmentSuccessPct,

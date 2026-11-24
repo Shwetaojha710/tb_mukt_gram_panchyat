@@ -117,6 +117,11 @@ function buildGpCte(ctx) {
     fromMonth: ctx.from.month,
     toYear: ctx.to.year,
     toMonth: ctx.to.month,
+    // Equivalent previous-year period for testing volume comparison (matched by gp_id)
+    prevFromYear: ctx.from.year - 1,
+    prevFromMonth: ctx.from.month,
+    prevToYear: ctx.to.year - 1,
+    prevToMonth: ctx.to.month,
   };
 
   if (ctx.divisionId) {
@@ -136,6 +141,9 @@ function buildGpCte(ctx) {
     params.gpId = ctx.gpId;
   }
 
+  // Same geography filters for previous-year testing aggregate (alias pe)
+  const prevWhere = where.map((clause) => clause.replace(/\be\./g, 'pe.'));
+
   const cte = `
     WITH gp AS (
       SELECT
@@ -154,14 +162,29 @@ function buildGpCte(ctx) {
       WHERE ${where.join(' AND ')}
       GROUP BY e.gp_id
     ),
+    prev AS (
+      SELECT
+        pe.gp_id,
+        ISNULL(SUM(pe.tested_naat), 0) AS tests_prev
+      FROM dbo.tb_mukt_entries pe
+      WHERE ${prevWhere
+        .join(' AND ')
+        .replace(/@fromYear/g, '@prevFromYear')
+        .replace(/@fromMonth/g, '@prevFromMonth')
+        .replace(/@toYear/g, '@prevToYear')
+        .replace(/@toMonth/g, '@prevToMonth')}
+      GROUP BY pe.gp_id
+    ),
     calc AS (
       SELECT
         g.*,
+        ISNULL(p.tests_prev, 0) AS tests_prev,
         CAST(CEILING(g.population * 30 / 1000.0) AS INT) AS target,
         CASE WHEN g.population > 0 AND g.cases * 1000 <= g.population THEN 1 ELSE 0 END AS eligible,
         CASE WHEN g.consented > g.received THEN g.consented - g.received ELSE 0 END AS poshan_pending,
         CASE WHEN q.medal IN ('BRONZE', 'SILVER', 'GOLD') THEN q.medal ELSE 'NOT_QUALIFIED' END AS award
       FROM gp g
+      LEFT JOIN prev p ON p.gp_id = g.gp_id
       LEFT JOIN dbo.tb_mukt_qualification_history q
         ON q.gp_id = g.gp_id AND q.year = @toYear
     ),
@@ -194,10 +217,15 @@ const AGG_COLUMNS = `
   ISNULL(SUM(CASE WHEN m.award = 'BRONZE' THEN 1 ELSE 0 END), 0) AS bronzeGps,
   ISNULL(SUM(CASE WHEN m.award = 'SILVER' THEN 1 ELSE 0 END), 0) AS silverGps,
   ISNULL(SUM(CASE WHEN m.award = 'GOLD' THEN 1 ELSE 0 END), 0) AS goldGps,
+  ISNULL(SUM(CASE WHEN m.tests_pending BETWEEN 1 AND 50 THEN 1 ELSE 0 END), 0) AS pendingBelow50,
   ISNULL(SUM(CASE WHEN m.tests_pending > 50 THEN 1 ELSE 0 END), 0) AS pendingAbove50,
+  ISNULL(SUM(CASE WHEN m.tests_pending > 0 THEN 1 ELSE 0 END), 0) AS pendingGps,
+  ISNULL(SUM(m.tests_pending), 0) AS testsPending,
   ISNULL(SUM(CASE WHEN m.cases = 0 THEN 1 ELSE 0 END), 0) AS zeroCaseGps,
   ISNULL(SUM(CASE WHEN m.cases = 0 AND m.tests_pending > 0 THEN 1 ELSE 0 END), 0) AS zeroCasePendingGps,
   ISNULL(SUM(CASE WHEN m.poshan_pending > 0 THEN 1 ELSE 0 END), 0) AS poshanPendingGps,
+  ISNULL(SUM(m.tests), 0) AS tests,
+  ISNULL(SUM(m.tests_prev), 0) AS testsPrevYear,
   ISNULL(SUM(m.cases), 0) AS cases,
   ISNULL(SUM(m.consented), 0) AS consented,
   ISNULL(SUM(m.poshan_pending), 0) AS poshanPending`;
@@ -386,6 +414,7 @@ async function getDrilldown(user, filters) {
         m.gp_name AS name,
         m.population,
         m.tests,
+        m.tests_prev AS testsPrevYear,
         m.cases,
         m.target,
         m.eligible,
@@ -433,6 +462,8 @@ function groupRow(r) {
     zeroCaseGps: num(r.zeroCaseGps),
     zeroCasePendingGps: num(r.zeroCasePendingGps),
     poshanPendingGps: num(r.poshanPendingGps),
+    tests: num(r.tests),
+    testsPrevYear: num(r.testsPrevYear),
     cases: num(r.cases),
     consented: num(r.consented),
     poshanPending: num(r.poshanPending),
@@ -566,15 +597,16 @@ async function exportWorkbook(user, filters = {}) {
       ['Total Blocks', k.totalBlocks],
       ['Total GPs', k.totalGps],
       ['Reporting GPs', k.reportingGps],
-      ['Eligible GPs', k.eligibleGps],
-      ['Qualified GPs', k.qualifiedGps],
-      ['Gold GPs', k.goldGps],
-      ['Silver GPs', k.silverGps],
+      ['Total Eligible GPs', k.eligibleGps],
+      ['GPs Qualified', k.qualifiedGps],
       ['Bronze GPs', k.bronzeGps],
-      ['Pending Above 50', k.pendingAbove50],
-      ['Zero-case GPs', k.zeroCaseGps],
-      ['Zero-case but tests pending', k.zeroCasePendingGps],
-      ['Poshan pending GPs', k.poshanPendingGps],
+      ['Silver GPs', k.silverGps],
+      ['Gold GPs', k.goldGps],
+      ['Tests Pending Below 50', k.pendingBelow50],
+      ['Tests Pending Above 50', k.pendingAbove50],
+      ['GPs with 0 Cases', k.zeroCaseGps],
+      ['GPs with 0 Cases but tests pending', k.zeroCasePendingGps],
+      ['Poshan Potli Pending', k.poshanPendingGps],
       ...((summary.buckets || []).map((b) => [`Tests pending · ${b.bucket}`, b.count])),
       ...((summary.awards || []).map((a) => [`Award · ${a.award}`, a.count])),
     ]
