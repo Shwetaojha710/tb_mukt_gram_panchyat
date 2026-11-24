@@ -1,0 +1,14 @@
+TBMP Issues
+1- Total District, 2- Total Block , 3- Total GPs,  4 - Total Eligible GP , 5- GP Qualified  , 6 Bronze, 7Silver ,8 Gold ,9.Testing pending  below 50, 10 above 50 ,11 GP with zero case 12 GP Zero case but testing pending 13- Poshan potli pending and District with bronze, silver and gold should Remove.
+Previous year line list update in portal
+In some cases Zero gram Panchayat showing not qualified test is done
+New GP Name ,  Initial  GP name in  drop down
+Testing Pending should be in B/W or Below 50
+Data is visible in the Dashboard Overview but is not reflecting in the Block-wise section or the TB Entry List.
+Aggregate Testing Data: Include the consolidated testing data.( Ex 50 Test Pending)
+Inclusion and Exclusion Criteria: Clearly define the inclusion  ( Zero or one case in 1000 Population & Poshan Potli and exclusion  30 Test &  Treatment Succus  Rate criteria.
+Previous Year's Data: Incorporate the previous year's data for comparison and reference.
+Previous Year’s Treatment Success Rate: If a GP had one TB case in the previous year and the patient died, the treatment success rate would be zero. However, if the GP has TB cases in the current year, this may create confusion regarding eligibility. This query has also been raised by users.
+2. One-Time Password Change: A provision for users to change their password should be available.
+3. Data Entry and Auto-Refresh: After completing one entry, when users proceed to the next entry, the previous data is not automatically refreshed or cleared. Users have to refresh the page manually after every entry.
+4. Treatment Success Rate Eligibility: If the treatment success rate is 66%, the dashboard is showing the GP as Qualified/Eligible. However, as per the prescribed guidelines, the required treatment success rate should be 92%–100%. Therefore, GPs with less than 92% should be marked as Not Eligible.
