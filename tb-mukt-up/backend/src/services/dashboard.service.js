@@ -124,7 +124,8 @@ async function getSummary(user, filters) {
   params.reportingMonth = reportingMonth;
   params.prevYear = year - 1;
 
-  // Reporting-month only metrics (ignore reportingMonth filter in where for YTD queries)
+  // Reporting-month only metrics (ignore reportingMonth filter in where for YTD queries).
+  // Keep filters.year so current-year KPIs stay scoped; prev-year queries use scopeNoYear below.
   const { whereSql: baseWhere, params: baseParams } = applyScope(user, {
     ...filters,
     reportingMonth: undefined,
@@ -136,6 +137,21 @@ async function getSummary(user, filters) {
   baseParams.qYear = year;
   baseParams.reportingMonth = reportingMonth;
   baseParams.prevYear = year - 1;
+
+  // Location/status only ? no reporting year/month. Prev-year queries set year explicitly
+  // (avoids impossible year=current AND year=prev that zeroed testedNaatPrev*).
+  const { whereSql: scopeNoYear, params: scopeNoYearParams } = applyScope(user, {
+    ...filters,
+    year: undefined,
+    reportingMonth: undefined,
+    monthFrom: undefined,
+    monthTo: undefined,
+    dateFrom: undefined,
+    dateTo: undefined,
+  });
+  scopeNoYearParams.qYear = year;
+  scopeNoYearParams.reportingMonth = reportingMonth;
+  scopeNoYearParams.prevYear = year - 1;
 
   const monthKpi = await query(
     `
@@ -314,6 +330,7 @@ async function getSummary(user, filters) {
     baseParams
   );
 
+  // Prev-year medals for GPs that have submitted entries in the selected (current) year.
   const previousYearMedals = await query(
     `
     SELECT
@@ -322,14 +339,17 @@ async function getSummary(user, filters) {
       ISNULL(SUM(CASE WHEN q.medal = 'GOLD' THEN 1 ELSE 0 END), 0) AS prevGoldGps
     FROM dbo.tb_mukt_qualification_history q
     INNER JOIN (
-      SELECT DISTINCT gp_id FROM dbo.tb_mukt_entries e WHERE ${baseWhere}
+      SELECT DISTINCT gp_id
+      FROM dbo.tb_mukt_entries e
+      WHERE ${scopeNoYear}
+        AND e.reporting_year = @qYear
     ) e ON e.gp_id = q.gp_id
     WHERE q.year = @prevYear
     `,
-    baseParams
+    scopeNoYearParams
   );
 
-  // Previous-year testing volume (same month / Jan–To window), matched by GP scope only.
+  // Previous-year testing volume (same month / Jan?To window), matched by GP scope only.
   // Does not change eligibility or treatment-success logic.
   const previousYearTesting = await query(
     `
@@ -337,10 +357,91 @@ async function getSummary(user, filters) {
       ISNULL(SUM(CASE WHEN e.reporting_month = @reportingMonth THEN e.tested_naat ELSE 0 END), 0) AS testedNaatPrevMonth,
       ISNULL(SUM(CASE WHEN e.reporting_month BETWEEN 1 AND @reportingMonth THEN e.tested_naat ELSE 0 END), 0) AS testedNaatPrevYtd
     FROM dbo.tb_mukt_entries e
-    WHERE ${baseWhere}
+    WHERE ${scopeNoYear}
       AND e.reporting_year = @prevYear
     `,
+    scopeNoYearParams
+  );
+
+  // Overview-parity GP metrics (same definitions as newDashboard cards) for Block/District/State views.
+  // Pending = max(0, CEILING(pop*30/1000) - tests) ? NOT sum of monthly testing_pending rows.
+  const overviewParity = await query(
+    `
+    SELECT
+      COUNT(*) AS reportingGps,
+      ISNULL(SUM(CASE WHEN g.pop > 0 AND g.cases * 1000.0 <= g.pop THEN 1 ELSE 0 END), 0) AS eligibleGps,
+      ISNULL(SUM(
+        CASE
+          WHEN g.pop > 0
+           AND g.tests > 0
+           AND g.cases * 1000.0 <= g.pop
+           AND g.tests >= CEILING(g.pop * 30 / 1000.0)
+          THEN 1 ELSE 0
+        END
+      ), 0) AS overviewQualifiedGps,
+      ISNULL(SUM(CASE WHEN g.pending BETWEEN 1 AND 50 THEN 1 ELSE 0 END), 0) AS pendingBelow50,
+      ISNULL(SUM(CASE WHEN g.pending > 50 THEN 1 ELSE 0 END), 0) AS pendingAbove50Gps,
+      ISNULL(SUM(CASE WHEN g.cases = 0 THEN 1 ELSE 0 END), 0) AS zeroCaseGps,
+      ISNULL(SUM(CASE WHEN g.cases = 0 AND g.pending > 0 THEN 1 ELSE 0 END), 0) AS zeroCasePendingGps,
+      ISNULL(SUM(CASE WHEN g.poshanPending > 0 THEN 1 ELSE 0 END), 0) AS poshanPendingGps
+    FROM (
+      SELECT
+        e.gp_id,
+        ISNULL(MAX(e.gp_population), 0) AS pop,
+        ISNULL(SUM(e.tested_naat), 0) AS tests,
+        ISNULL(SUM(e.tb_diagnosed), 0) AS cases,
+        CASE
+          WHEN ISNULL(MAX(e.gp_population), 0) > 0
+           AND CEILING(ISNULL(MAX(e.gp_population), 0) * 30 / 1000.0) > ISNULL(SUM(e.tested_naat), 0)
+          THEN CAST(CEILING(ISNULL(MAX(e.gp_population), 0) * 30 / 1000.0) - ISNULL(SUM(e.tested_naat), 0) AS INT)
+          ELSE 0
+        END AS pending,
+        CASE
+          WHEN ISNULL(SUM(e.poshan_consented), 0) > ISNULL(SUM(e.poshan_received), 0)
+          THEN ISNULL(SUM(e.poshan_consented), 0) - ISNULL(SUM(e.poshan_received), 0)
+          ELSE 0
+        END AS poshanPending
+      FROM dbo.tb_mukt_entries e
+      WHERE ${baseWhere}
+        AND e.reporting_year = @qYear
+        AND e.reporting_month BETWEEN 1 AND @reportingMonth
+      GROUP BY e.gp_id
+    ) g
+    `,
     baseParams
+  );
+
+  // Master geography totals (location master) ? mirrors Overview Total Districts/Blocks/GPs.
+  const masterWhere = ['ISNULL(g.IsDeleted,0)=0'];
+  const masterParams = { ...baseParams };
+  if (masterParams.scopeDistrictId || masterParams.districtId) {
+    masterWhere.push('g.Fk_DistrictId = @masterDistrictId');
+    masterParams.masterDistrictId = masterParams.scopeDistrictId || masterParams.districtId;
+  }
+  if (masterParams.scopeBlockId || masterParams.blockId) {
+    masterWhere.push('g.Fk_BlockId = @masterBlockId');
+    masterParams.masterBlockId = masterParams.scopeBlockId || masterParams.blockId;
+  }
+  const masterCounts = await query(
+    `
+    SELECT
+      (SELECT COUNT(DISTINCT d.PK_UniqueID)
+       FROM dbo.District d
+       INNER JOIN dbo.GramPanchayat gx ON gx.Fk_DistrictId = d.PK_UniqueID
+       WHERE ISNULL(d.IsDeleted,0)=0 AND ISNULL(gx.IsDeleted,0)=0
+         ${masterParams.masterDistrictId ? 'AND d.PK_UniqueID = @masterDistrictId' : ''}
+         ${masterParams.masterBlockId ? 'AND gx.Fk_BlockId = @masterBlockId' : ''}
+      ) AS totalDistricts,
+      (SELECT COUNT(DISTINCT b.PK_UniqueID)
+       FROM dbo.Block b
+       INNER JOIN dbo.GramPanchayat gx ON gx.Fk_BlockId = b.PK_UniqueID
+       WHERE ISNULL(b.IsDeleted,0)=0 AND ISNULL(gx.IsDeleted,0)=0
+         ${masterParams.masterDistrictId ? 'AND b.Fk_DistrictId = @masterDistrictId' : ''}
+         ${masterParams.masterBlockId ? 'AND b.PK_UniqueID = @masterBlockId' : ''}
+      ) AS totalBlocks,
+      (SELECT COUNT(*) FROM dbo.GramPanchayat g WHERE ${masterWhere.join(' AND ')}) AS totalGpsMaster
+    `,
+    masterParams
   );
 
   return {
@@ -356,6 +457,12 @@ async function getSummary(user, filters) {
       ...previousYearTesting.recordset[0],
       ...districtMedalPerformance.recordset[0],
       ...blockMedalPerformance.recordset[0],
+      ...overviewParity.recordset[0],
+      ...masterCounts.recordset[0],
+      // Prefer Overview naming for pending-above-50 GP count when present
+      pendingAbove50:
+        overviewParity.recordset[0]?.pendingAbove50Gps ??
+        pendingBuckets.recordset[0]?.bucketAbove50,
     },
     monthly: monthly.recordset,
     cumulativeYtd: cumulative.recordset[0],

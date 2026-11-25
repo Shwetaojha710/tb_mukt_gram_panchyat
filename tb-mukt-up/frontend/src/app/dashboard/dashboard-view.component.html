@@ -79,9 +79,26 @@
   <!-- ===================== STATE DASHBOARD — all fields in one table ===================== -->
   <ng-container *ngIf="!loading && isState && summary as s">
     <div class="stat-cards">
+      <div class="stat-card">
+        <span>Total Districts</span>
+        <strong>{{ fmt(s.kpis.totalDistricts) }}</strong>
+      </div>
+      <div class="stat-card">
+        <span>Total Blocks</span>
+        <strong>{{ fmt(s.kpis.totalBlocks) }}</strong>
+      </div>
+      <div class="stat-card">
+        <span>Total GPs</span>
+        <strong>{{ fmt(s.kpis.totalGpsMaster) }}</strong>
+        <em class="card-sub">{{ fmt(s.kpis.reportingGps) }} reporting</em>
+      </div>
+      <div class="stat-card">
+        <span>Total Eligible GPs</span>
+        <strong>{{ fmt(s.kpis.eligibleGps) }}</strong>
+      </div>
       <div class="stat-card ok">
-        <span>GPs qualified (YTD)</span>
-        <strong>{{ fmt(s.kpis.qualifiedGpsYtd) }}</strong>
+        <span>GPs Qualified</span>
+        <strong>{{ fmt(s.kpis.overviewQualifiedGps) }}</strong>
       </div>
       <div class="stat-card bronze">
         <span>Bronze GPs</span>
@@ -96,8 +113,24 @@
         <strong>{{ fmt(s.kpis.goldGps) }}</strong>
       </div>
       <div class="stat-card warn">
-        <span>Pending above 50</span>
-        <strong>{{ fmt(s.kpis.bucketAbove50) }}</strong>
+        <span>Tests Pending Below 50</span>
+        <strong>{{ fmt(s.kpis.pendingBelow50) }}</strong>
+      </div>
+      <div class="stat-card warn">
+        <span>Tests Pending Above 50</span>
+        <strong>{{ fmt(s.kpis.pendingAbove50) }}</strong>
+      </div>
+      <div class="stat-card">
+        <span>GPs with 0 Cases</span>
+        <strong>{{ fmt(s.kpis.zeroCaseGps) }}</strong>
+      </div>
+      <div class="stat-card warn">
+        <span>GPs with 0 Cases but tests pending</span>
+        <strong>{{ fmt(s.kpis.zeroCasePendingGps) }}</strong>
+      </div>
+      <div class="stat-card warn">
+        <span>Poshan Potli Pending</span>
+        <strong>{{ fmt(s.kpis.poshanPendingGps) }}</strong>
       </div>
       <div class="stat-card">
         <span>Presumptive tests (YTD)</span>
@@ -106,6 +139,18 @@
       <div class="stat-card">
         <span>Prev. year tests (YTD)</span>
         <strong>{{ fmt(s.kpis.testedNaatPrevYtd) }}</strong>
+      </div>
+      <div class="stat-card bronze">
+        <span>Prev. year Bronze</span>
+        <strong>{{ fmt(s.kpis.prevBronzeGps) }}</strong>
+      </div>
+      <div class="stat-card silver">
+        <span>Prev. year Silver</span>
+        <strong>{{ fmt(s.kpis.prevSilverGps) }}</strong>
+      </div>
+      <div class="stat-card gold">
+        <span>Prev. year Gold</span>
+        <strong>{{ fmt(s.kpis.prevGoldGps) }}</strong>
       </div>
     </div>
 
@@ -342,9 +387,22 @@
   <!-- ===================== DISTRICT DASHBOARD (spec table) ===================== -->
   <ng-container *ngIf="!loading && isDistrict && summary as s">
     <div class="stat-cards">
+      <div class="stat-card">
+        <span>Total Blocks</span>
+        <strong>{{ fmt(s.kpis.totalBlocks) }}</strong>
+      </div>
+      <div class="stat-card">
+        <span>Total GPs</span>
+        <strong>{{ fmt(s.kpis.totalGpsMaster) }}</strong>
+        <em class="card-sub">{{ fmt(s.kpis.reportingGps) }} reporting</em>
+      </div>
+      <div class="stat-card">
+        <span>Total Eligible GPs</span>
+        <strong>{{ fmt(s.kpis.eligibleGps) }}</strong>
+      </div>
       <div class="stat-card ok">
-        <span>GPs qualified (YTD)</span>
-        <strong>{{ fmt(s.kpis.qualifiedGpsYtd) }}</strong>
+        <span>GPs Qualified</span>
+        <strong>{{ fmt(s.kpis.overviewQualifiedGps) }}</strong>
       </div>
       <div class="stat-card bronze">
         <span>Bronze GPs</span>
@@ -359,8 +417,24 @@
         <strong>{{ fmt(s.kpis.goldGps) }}</strong>
       </div>
       <div class="stat-card warn">
-        <span>Pending above 50</span>
-        <strong>{{ fmt(s.kpis.bucketAbove50) }}</strong>
+        <span>Tests Pending Below 50</span>
+        <strong>{{ fmt(s.kpis.pendingBelow50) }}</strong>
+      </div>
+      <div class="stat-card warn">
+        <span>Tests Pending Above 50</span>
+        <strong>{{ fmt(s.kpis.pendingAbove50) }}</strong>
+      </div>
+      <div class="stat-card">
+        <span>GPs with 0 Cases</span>
+        <strong>{{ fmt(s.kpis.zeroCaseGps) }}</strong>
+      </div>
+      <div class="stat-card warn">
+        <span>GPs with 0 Cases but tests pending</span>
+        <strong>{{ fmt(s.kpis.zeroCasePendingGps) }}</strong>
+      </div>
+      <div class="stat-card warn">
+        <span>Poshan Potli Pending</span>
+        <strong>{{ fmt(s.kpis.poshanPendingGps) }}</strong>
       </div>
       <div class="stat-card">
         <span>Presumptive tests (YTD)</span>
@@ -369,6 +443,18 @@
       <div class="stat-card">
         <span>Prev. year tests (YTD)</span>
         <strong>{{ fmt(s.kpis.testedNaatPrevYtd) }}</strong>
+      </div>
+      <div class="stat-card bronze">
+        <span>Prev. year Bronze</span>
+        <strong>{{ fmt(s.kpis.prevBronzeGps) }}</strong>
+      </div>
+      <div class="stat-card silver">
+        <span>Prev. year Silver</span>
+        <strong>{{ fmt(s.kpis.prevSilverGps) }}</strong>
+      </div>
+      <div class="stat-card gold">
+        <span>Prev. year Gold</span>
+        <strong>{{ fmt(s.kpis.prevGoldGps) }}</strong>
       </div>
     </div>
 
@@ -606,9 +692,18 @@
   <!-- ===================== BLOCK DASHBOARD (spec table) ===================== -->
   <ng-container *ngIf="!loading && isBlock && summary as s">
     <div class="stat-cards">
+      <div class="stat-card">
+        <span>Total GPs</span>
+        <strong>{{ fmt(s.kpis.totalGpsMaster) }}</strong>
+        <em class="card-sub">{{ fmt(s.kpis.reportingGps) }} reporting</em>
+      </div>
+      <div class="stat-card">
+        <span>Total Eligible GPs</span>
+        <strong>{{ fmt(s.kpis.eligibleGps) }}</strong>
+      </div>
       <div class="stat-card ok">
-        <span>GPs qualified (YTD)</span>
-        <strong>{{ fmt(s.kpis.qualifiedGpsYtd) }}</strong>
+        <span>GPs Qualified</span>
+        <strong>{{ fmt(s.kpis.overviewQualifiedGps) }}</strong>
       </div>
       <div class="stat-card bronze">
         <span>Bronze GPs</span>
@@ -623,8 +718,24 @@
         <strong>{{ fmt(s.kpis.goldGps) }}</strong>
       </div>
       <div class="stat-card warn">
-        <span>Pending above 50</span>
-        <strong>{{ fmt(s.kpis.bucketAbove50) }}</strong>
+        <span>Tests Pending Below 50</span>
+        <strong>{{ fmt(s.kpis.pendingBelow50) }}</strong>
+      </div>
+      <div class="stat-card warn">
+        <span>Tests Pending Above 50</span>
+        <strong>{{ fmt(s.kpis.pendingAbove50) }}</strong>
+      </div>
+      <div class="stat-card">
+        <span>GPs with 0 Cases</span>
+        <strong>{{ fmt(s.kpis.zeroCaseGps) }}</strong>
+      </div>
+      <div class="stat-card warn">
+        <span>GPs with 0 Cases but tests pending</span>
+        <strong>{{ fmt(s.kpis.zeroCasePendingGps) }}</strong>
+      </div>
+      <div class="stat-card warn">
+        <span>Poshan Potli Pending</span>
+        <strong>{{ fmt(s.kpis.poshanPendingGps) }}</strong>
       </div>
       <div class="stat-card">
         <span>Presumptive tests (YTD)</span>
@@ -633,6 +744,18 @@
       <div class="stat-card">
         <span>Prev. year tests (YTD)</span>
         <strong>{{ fmt(s.kpis.testedNaatPrevYtd) }}</strong>
+      </div>
+      <div class="stat-card bronze">
+        <span>Prev. year Bronze</span>
+        <strong>{{ fmt(s.kpis.prevBronzeGps) }}</strong>
+      </div>
+      <div class="stat-card silver">
+        <span>Prev. year Silver</span>
+        <strong>{{ fmt(s.kpis.prevSilverGps) }}</strong>
+      </div>
+      <div class="stat-card gold">
+        <span>Prev. year Gold</span>
+        <strong>{{ fmt(s.kpis.prevGoldGps) }}</strong>
       </div>
     </div>
 

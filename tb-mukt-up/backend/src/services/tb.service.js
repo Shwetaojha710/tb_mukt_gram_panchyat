@@ -303,6 +303,9 @@ function mapEntry(row) {
     status: row.status,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    // Award medals from qualification_history (optional columns when JOINed)
+    medal: row.medal || null,
+    previousMedal: row.previousMedal || row.previous_medal || null,
   };
 }
 
@@ -328,7 +331,18 @@ function withEditFlags(entry, settings, user) {
 
 async function getEntry(user, { gpId, month, year }) {
   const result = await query(
-    `SELECT * FROM dbo.tb_mukt_entries WHERE gp_id=@gpId AND reporting_month=@month AND reporting_year=@year`,
+    `
+    SELECT
+      e.*,
+      q.medal AS medal,
+      pq.medal AS previousMedal
+    FROM dbo.tb_mukt_entries e
+    LEFT JOIN dbo.tb_mukt_qualification_history q
+      ON q.gp_id = e.gp_id AND q.year = e.reporting_year
+    LEFT JOIN dbo.tb_mukt_qualification_history pq
+      ON pq.gp_id = e.gp_id AND pq.year = e.reporting_year - 1
+    WHERE e.gp_id=@gpId AND e.reporting_month=@month AND e.reporting_year=@year
+    `,
     { gpId, month, year }
   );
   const entry = result.recordset[0];
@@ -399,8 +413,15 @@ async function listEntries(user, filters = {}) {
 
   const result = await query(
     `
-    SELECT e.*
+    SELECT
+      e.*,
+      q.medal AS medal,
+      pq.medal AS previousMedal
     FROM dbo.tb_mukt_entries e
+    LEFT JOIN dbo.tb_mukt_qualification_history q
+      ON q.gp_id = e.gp_id AND q.year = e.reporting_year
+    LEFT JOIN dbo.tb_mukt_qualification_history pq
+      ON pq.gp_id = e.gp_id AND pq.year = e.reporting_year - 1
     WHERE ${where.join(' AND ')}
     ORDER BY e.reporting_year DESC, e.reporting_month DESC, e.updated_at DESC
     OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
