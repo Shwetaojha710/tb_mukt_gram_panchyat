@@ -2,122 +2,72 @@
   <div class="page-head">
     <div>
       <h1>Year wise TBMP Data</h1>
-      <p>Pick a year, then a district, to see its TB Units and annual notification targets.</p>
+      <p *ngIf="book as b">{{ b.label }}</p>
     </div>
   </div>
 
   <div class="toolbar panel">
     <div class="year-chips" role="group" aria-label="Year">
       <button
-        *ngFor="let y of years"
+        *ngFor="let b of books"
         type="button"
         class="year-chip"
-        [class.active]="year === y"
-        [disabled]="loading || !isYearAvailable(y)"
-        [title]="isYearAvailable(y) ? y + ' TU list' : 'No data for ' + y + ' yet'"
-        (click)="selectYear(y)"
+        [class.active]="year === b.year"
+        (click)="selectYear(b.year)"
       >
-        {{ y }}
+        {{ b.year }}
       </button>
     </div>
 
-    <label class="search" *ngIf="!scopedDistrict">
-      <span class="sr-only">Search district</span>
-      <input
-        type="search"
-        [(ngModel)]="districtQuery"
-        placeholder="Search district…"
-        [disabled]="loading || !summary?.available"
-      />
-      <button
-        *ngIf="districtQuery"
-        type="button"
-        class="clear"
-        (click)="clearDistrictSearch()"
-        aria-label="Clear search"
-      >
-        ×
-      </button>
+    <label class="view" *ngIf="(book?.sheets?.length || 0) > 1">
+      <span>View</span>
+      <select [ngModel]="sheetIndex" (ngModelChange)="selectSheet($event)">
+        <option *ngFor="let s of book?.sheets; let i = index" [ngValue]="i">{{ sheetLabel(s.name) }}</option>
+      </select>
     </label>
 
-    <p class="match" *ngIf="summary?.available && !scopedDistrict">
-      {{ fmt(districts.length) }} of {{ fmt(summary?.totalDistricts) }} districts
-    </p>
+    <label class="search">
+      <span class="sr-only">Search</span>
+      <input type="search" [(ngModel)]="query" placeholder="Search district…" />
+    </label>
+    <span class="count" *ngIf="sheet">{{ rows.length }} districts</span>
   </div>
 
-  <div class="stat-cards" *ngIf="summary?.available">
-    <div class="stat-card">
-      <span>Districts</span>
-      <strong>{{ fmt(summary?.totalDistricts) }}</strong>
+  <section class="panel table-panel" *ngIf="sheet as s">
+    <header>
+      <h2>{{ s.title || sheetLabel(s.name) }}</h2>
+    </header>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th
+              *ngFor="let i of columns"
+              [class.num]="!isTextHeader(s.headers[i])"
+              [class.sticky]="i < 2"
+              [class.sticky-2]="i === 1"
+              [title]="s.headers[i]"
+            >
+              {{ headerLabel(s.headers[i]) }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows" [class.total]="isTotal(row)">
+            <td
+              *ngFor="let i of columns"
+              [class.num]="isNum(row[i])"
+              [class.sticky]="i < 2"
+              [class.sticky-2]="i === 1"
+            >
+              {{ cellText(row[i], s.headers[i] || '') }}
+            </td>
+          </tr>
+          <tr *ngIf="!rows.length">
+            <td [attr.colspan]="columns.length" class="empty">No district matches “{{ query }}”.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <div class="stat-card">
-      <span>TB Units</span>
-      <strong>{{ fmt(summary?.totalTus) }}</strong>
-    </div>
-    <div class="stat-card">
-      <span>Annual notification target</span>
-      <strong>{{ fmt(summary?.totalAnnualTarget) }}</strong>
-    </div>
-  </div>
-
-  <div *ngIf="loading" class="loading-box">
-    <div class="spinner-border text-primary"></div>
-    <div class="mt-2">Loading {{ year }}…</div>
-  </div>
-
-  <div class="panel empty-panel" *ngIf="!loading && summary && !summary.available">
-    <p class="empty-msg">No TU list for {{ year }} yet.</p>
-    <p class="hint">Choose a year that is available — currently <strong>2025</strong>.</p>
-  </div>
-
-  <div class="split" *ngIf="!loading && summary?.available">
-    <section class="panel list-panel">
-      <header>
-        <h2>Districts</h2>
-      </header>
-      <div class="scroll">
-        <button
-          type="button"
-          class="district-row"
-          *ngFor="let d of districts; let i = index"
-          [class.active]="selected?.name === d.name"
-          (click)="openDistrict(d)"
-        >
-          <span class="idx">{{ i + 1 }}</span>
-          <span class="name">{{ d.name }}</span>
-          <span class="meta">
-            <strong>{{ fmt(d.tuCount) }}</strong>
-            <em>TUs</em>
-          </span>
-        </button>
-        <p class="empty-inline" *ngIf="!districts.length">No district matches “{{ districtQuery }}”.</p>
-      </div>
-    </section>
-
-    <section class="panel list-panel">
-      <header class="detail-head" *ngIf="selected as s">
-        <div>
-          <h2>{{ s.name }}</h2>
-          <p>{{ fmt(s.tuCount) }} TB Units · target {{ fmt(s.annualTarget) }}</p>
-        </div>
-        <label class="search compact">
-          <span class="sr-only">Search TB Unit</span>
-          <input type="search" [(ngModel)]="tuQuery" placeholder="Search TU…" [disabled]="detailLoading" />
-        </label>
-      </header>
-
-      <div *ngIf="detailLoading" class="loading-box sm">
-        <div class="spinner-border spinner-border-sm text-primary"></div>
-      </div>
-
-      <div class="scroll" *ngIf="!detailLoading && detail">
-        <div class="tu-row" *ngFor="let t of tus; let i = index">
-          <span class="idx">{{ i + 1 }}</span>
-          <span class="name">{{ t.name }}</span>
-          <span class="target">{{ fmt(t.annualTarget) }}</span>
-        </div>
-        <p class="empty-inline" *ngIf="!tus.length">No TB Unit matches “{{ tuQuery }}”.</p>
-      </div>
-    </section>
-  </div>
+  </section>
 </div>

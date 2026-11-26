@@ -1,13 +1,22 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NotifyService } from '../core/services/notify.service';
-import {
-  TuDirectoryDetail,
-  TuDirectoryService,
-  TuDirectorySummary,
-  TuDistrictSummary,
-} from '../core/services/tu-directory.service';
+import data from './tbmp-year-data.json';
+
+type Cell = string | number | null;
+
+interface Sheet {
+  name: string;
+  title: string | null;
+  headers: string[];
+  rows: Cell[][];
+}
+
+interface YearBook {
+  year: number;
+  label: string;
+  sheets: Sheet[];
+}
 
 @Component({
   selector: 'app-tu-directory',
@@ -16,109 +25,113 @@ import {
   templateUrl: './tu-directory.component.html',
   styleUrl: './tu-directory.component.scss',
 })
-export class TuDirectoryComponent implements OnInit {
-  private api = inject(TuDirectoryService);
-  private notify = inject(NotifyService);
+export class TuDirectoryComponent {
+  readonly books = (data as YearBook[]).slice().sort((a, b) => b.year - a.year);
+  year = this.books[0]?.year ?? 2025;
+  sheetIndex = this.defaultSheetIndex(this.year);
+  query = '';
 
-  years = [2024, 2025, 2026];
-  availableYears: number[] = [];
-  year = 2025;
-  districtQuery = '';
-  tuQuery = '';
-  loading = false;
-  detailLoading = false;
-
-  summary: TuDirectorySummary | null = null;
-  selected: TuDistrictSummary | null = null;
-  detail: TuDirectoryDetail | null = null;
-  scopedDistrict: string | null = null;
-
-  ngOnInit() {
-    this.api.meta().subscribe({
-      next: (res) => {
-        this.years = res.data?.years?.length ? res.data.years : this.years;
-        this.availableYears = res.data?.availableYears || [];
-        this.year = res.data?.defaultYear || 2025;
-        this.scopedDistrict = res.data?.scopedDistrict || null;
-        this.loadSummary();
-      },
-      error: (err) => {
-        this.notify.fromHttpError(err, 'Failed to load TU directory');
-        this.loadSummary();
-      },
-    });
+  get book(): YearBook | undefined {
+    return this.books.find((b) => b.year === this.year) ?? this.books[0];
   }
 
-  get districts(): TuDistrictSummary[] {
-    const list = this.summary?.districts || [];
-    const q = this.districtQuery.trim().toLowerCase();
+  get sheet(): Sheet | undefined {
+    const sheets = this.book?.sheets ?? [];
+    return sheets[this.sheetIndex] ?? sheets[0];
+  }
+
+  /** Skip unnamed Excel helper columns so the table stays readable. */
+  get columns(): number[] {
+    const headers = this.sheet?.headers ?? [];
+    const named = headers.map((h, i) => (h.trim() ? i : -1)).filter((i) => i >= 0);
+    return named.length ? named : headers.map((_, i) => i);
+  }
+
+  get rows(): Cell[][] {
+    const list = this.sheet?.rows ?? [];
+    const q = this.query.trim().toLowerCase();
     if (!q) return list;
-    return list.filter((d) => d.name.toLowerCase().includes(q));
+    return list.filter((row) => row.some((cell) => String(cell ?? '').toLowerCase().includes(q)));
   }
 
-  get tus() {
-    const list = this.detail?.tus || [];
-    const q = this.tuQuery.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter((t) => t.name.toLowerCase().includes(q));
+  selectYear(year: number) {
+    if (this.year === year) return;
+    this.year = year;
+    this.sheetIndex = this.defaultSheetIndex(year);
+    this.query = '';
   }
 
-  selectYear(y: number) {
-    if (this.loading || this.year === y || !this.isYearAvailable(y)) return;
-    this.year = y;
-    this.districtQuery = '';
-    this.tuQuery = '';
-    this.selected = null;
-    this.detail = null;
-    this.loadSummary();
+  selectSheet(index: number) {
+    this.sheetIndex = Number(index) || 0;
+    this.query = '';
   }
 
-  isYearAvailable(y: number): boolean {
-    return this.availableYears.includes(y);
+  sheetLabel(name: string): string {
+    const labels: Record<string, string> = {
+      'Final Sheet of Qualified GP': 'Qualified GPs',
+      '% wise TBMP Data': 'Percent of GPs',
+      'In Increasing order': 'Highest % first',
+      'Decreased order': 'Lowest % first',
+      '1 april 2025': '1 April 2025 list',
+      'Final Sheet Analysis raw': 'Claim check',
+      Sheet1: 'District list',
+    };
+    return labels[name] || name;
   }
 
-  loadSummary() {
-    this.loading = true;
-    this.api.summary(this.year).subscribe({
-      next: (res) => {
-        this.summary = res.data;
-        this.loading = false;
-        const list = res.data?.districts || [];
-        if (list.length === 1) this.openDistrict(list[0]);
-        else if (list.length && !this.selected) this.openDistrict(list[0]);
-      },
-      error: (err) => {
-        this.loading = false;
-        this.summary = null;
-        this.notify.fromHttpError(err, 'Failed to load districts');
-      },
+  headerLabel(header: string): string {
+    const h = header.trim().toLowerCase();
+    if (!h) return '';
+    if (h === '%' || h.startsWith('%')) return '% qualified';
+    if (h.startsWith('s. no') || h.startsWith('s no')) return '#';
+    if (h.includes('district')) return 'District';
+    if (h.includes('total') && h.includes('panchayat') && !h.includes('claim') && !h.includes('mukt') && !h.includes('tb free')) {
+      return 'Total GPs';
+    }
+    if (h.includes('claim')) return 'Claims submitted';
+    if (h.includes('after verification') || h.includes('qualified')) return 'Qualified GPs';
+    if (h.includes('bronze')) return 'Bronze';
+    if (h.includes('silver')) return 'Silver';
+    if (h.includes('gold')) return 'Gold';
+    if (h.includes('tb free') || h.includes('2023')) return 'TB free 2023';
+    return header;
+  }
+
+  isTotal(row: Cell[]): boolean {
+    return row.some((cell) => {
+      const text = String(cell ?? '').trim().toLowerCase();
+      return text === 'uttar pradesh' || text.startsWith('total');
     });
   }
 
-  openDistrict(d: TuDistrictSummary) {
-    if (this.selected?.name === d.name && this.detail) return;
-    this.selected = d;
-    this.tuQuery = '';
-    this.detailLoading = true;
-    this.detail = null;
-    this.api.district(this.year, d.name).subscribe({
-      next: (res) => {
-        this.detail = res.data;
-        this.detailLoading = false;
-      },
-      error: (err) => {
-        this.detailLoading = false;
-        this.notify.fromHttpError(err, 'Failed to load TUs');
-      },
-    });
+  isPercent(header: string): boolean {
+    return header.trim() === '%';
   }
 
-  clearDistrictSearch() {
-    this.districtQuery = '';
+  isTextHeader(header: string): boolean {
+    const h = header.toLowerCase();
+    return h.includes('name') || h.includes('district') || h.includes('status') || !header.trim();
   }
 
-  fmt(n: number | null | undefined): string {
-    if (n == null || Number.isNaN(Number(n))) return '0';
-    return Number(n).toLocaleString('en-IN');
+  isNum(value: Cell): boolean {
+    return typeof value === 'number';
+  }
+
+  cellText(value: Cell, header: string): string {
+    if (value == null || value === '') return '';
+    if (typeof value === 'number') {
+      if (this.isPercent(header)) {
+        return `${value.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}%`;
+      }
+      if (Number.isInteger(value)) return value.toLocaleString('en-IN');
+      return value.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    }
+    return value;
+  }
+
+  private defaultSheetIndex(year: number): number {
+    const sheets = this.books.find((b) => b.year === year)?.sheets ?? [];
+    const preferred = sheets.findIndex((s) => s.name === 'Final Sheet of Qualified GP');
+    return preferred >= 0 ? preferred : 0;
   }
 }
