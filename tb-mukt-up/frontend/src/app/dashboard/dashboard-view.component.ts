@@ -36,16 +36,14 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
   chart?: Chart;
 
   loading = false;
-  year = Math.min(2026, Math.max(2024, new Date().getFullYear()));
+  year = Math.min(2026, Math.max(2023, new Date().getFullYear()));
   reportingMonth = new Date().getMonth() + 1;
   fromYear = this.year;
   fromMonth = 1;
   toYear = this.year;
   toMonth = this.reportingMonth;
-  /** Same years as Overview — one year per load keeps dashboards fast. */
-  readonly years = [2024, 2025, 2026] as const;
-  readonly periodMinYear = 2024;
-  readonly periodMaxYear = 2026;
+  readonly periodMinYear = 2023;
+  readonly periodMaxYear = new Date().getFullYear();
   location: LocationSelection = {};
   summary: any = null;
   rankings: any = null;
@@ -188,29 +186,12 @@ export class DashboardViewComponent implements OnInit, OnDestroy {
   }
 
   private resetPeriodDefaults() {
-    this.year = Math.min(2026, Math.max(2024, new Date().getFullYear()));
+    this.year = Math.min(2026, Math.max(2023, new Date().getFullYear()));
     this.reportingMonth = new Date().getMonth() + 1;
     this.fromYear = this.year;
     this.fromMonth = 1;
     this.toYear = this.year;
-    this.toMonth = this.year === new Date().getFullYear() ? this.reportingMonth : 12;
-  }
-
-  isYearActive(y: number): boolean {
-    return this.fromYear === y && this.toYear === y;
-  }
-
-  /** Year chip → Jan–Dec (or Jan–current for this year), then reload. */
-  selectYear(y: number) {
-    if (this.loading) return;
-    const now = new Date();
-    this.year = y;
-    this.fromYear = y;
-    this.fromMonth = 1;
-    this.toYear = y;
-    this.toMonth = y === now.getFullYear() ? now.getMonth() + 1 : 12;
-    this.reportingMonth = this.toMonth;
-    this.load();
+    this.toMonth = this.reportingMonth;
   }
 
   resetFilters() {

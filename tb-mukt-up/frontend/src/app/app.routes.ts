@@ -65,6 +65,12 @@ export const routes: Routes = [
         loadComponent: () => import('./tb-upload/tb-upload.component').then((m) => m.TbUploadComponent),
       },
       {
+        path: 'tu-directory',
+        canActivate: [roleGuard(['STATE', 'DIVISION', 'DISTRICT', 'TEHSIL', 'BLOCK'])],
+        loadComponent: () =>
+          import('./tu-directory/tu-directory.component').then((m) => m.TuDirectoryComponent),
+      },
+      {
         path: 'settings/tb-entry',
         canActivate: [roleGuard(['STATE'])],
         loadComponent: () =>

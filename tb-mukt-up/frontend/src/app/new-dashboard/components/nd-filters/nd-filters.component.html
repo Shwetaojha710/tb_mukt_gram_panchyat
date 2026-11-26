@@ -1,20 +1,4 @@
 <form class="filter-bar" (ngSubmit)="submit()" novalidate>
-  <div class="f-item f-years">
-    <span class="form-label">Year</span>
-    <div class="year-chips" role="group" aria-label="Reporting year">
-      <button
-        *ngFor="let y of years"
-        type="button"
-        class="year-chip"
-        [class.active]="isYearActive(y)"
-        [disabled]="loading"
-        (click)="selectYear(y)"
-      >
-        {{ y }}
-      </button>
-    </div>
-  </div>
-
   <div class="f-item f-period">
     <app-month-year-picker
       label="From"
