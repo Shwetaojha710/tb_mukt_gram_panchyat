@@ -175,7 +175,6 @@ jobs:
       - name: Install backend deps + restart on server
         if: needs.build.outputs.deploy_backend == 'true'
         uses: appleboy/ssh-action@v1.2.0
-        continue-on-error: true
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USERNAME }}
@@ -189,6 +188,7 @@ jobs:
               npm ci --omit=dev
             fi
             RESTART_CMD='${{ secrets.DEPLOY_RESTART_CMD }}'
-            if [ -n "$RESTART_CMD" ]; then
-              eval "$RESTART_CMD"
+            if [ -z "$RESTART_CMD" ]; then
+              RESTART_CMD='pm2 restart tbmukt-api || pm2 restart all'
             fi
+            eval "$RESTART_CMD"
