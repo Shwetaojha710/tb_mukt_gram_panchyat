@@ -27,9 +27,12 @@ interface YearBook {
 })
 export class TuDirectoryComponent {
   readonly books = (data as YearBook[]).slice().sort((a, b) => b.year - a.year);
+  readonly pageSize = 20;
+
   year = this.books[0]?.year ?? 2025;
   sheetIndex = this.defaultSheetIndex(this.year);
   query = '';
+  page = 1;
 
   get book(): YearBook | undefined {
     return this.books.find((b) => b.year === this.year) ?? this.books[0];
@@ -47,11 +50,34 @@ export class TuDirectoryComponent {
     return named.length ? named : headers.map((_, i) => i);
   }
 
-  get rows(): Cell[][] {
+  get filteredRows(): Cell[][] {
     const list = this.sheet?.rows ?? [];
     const q = this.query.trim().toLowerCase();
     if (!q) return list;
     return list.filter((row) => row.some((cell) => String(cell ?? '').toLowerCase().includes(q)));
+  }
+
+  get totalRows(): number {
+    return this.filteredRows.length;
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalRows / this.pageSize));
+  }
+
+  get pageRows(): Cell[][] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredRows.slice(start, start + this.pageSize);
+  }
+
+  /** Compact page buttons around current page (max 5). */
+  get pageNumbers(): number[] {
+    const total = this.totalPages;
+    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
+    let start = Math.max(1, this.page - 2);
+    let end = Math.min(total, start + 4);
+    start = Math.max(1, end - 4);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
   selectYear(year: number) {
@@ -59,11 +85,31 @@ export class TuDirectoryComponent {
     this.year = year;
     this.sheetIndex = this.defaultSheetIndex(year);
     this.query = '';
+    this.page = 1;
   }
 
   selectSheet(index: number) {
     this.sheetIndex = Number(index) || 0;
     this.query = '';
+    this.page = 1;
+  }
+
+  onSearch(value: string) {
+    this.query = value;
+    this.page = 1;
+  }
+
+  goToPage(p: number) {
+    if (p < 1 || p > this.totalPages || p === this.page) return;
+    this.page = p;
+  }
+
+  prevPage() {
+    this.goToPage(this.page - 1);
+  }
+
+  nextPage() {
+    this.goToPage(this.page + 1);
   }
 
   sheetLabel(name: string): string {
@@ -82,18 +128,26 @@ export class TuDirectoryComponent {
   headerLabel(header: string): string {
     const h = header.trim().toLowerCase();
     if (!h) return '';
-    if (h === '%' || h.startsWith('%')) return '% qualified';
-    if (h.startsWith('s. no') || h.startsWith('s no')) return '#';
-    if (h.includes('district')) return 'District';
-    if (h.includes('total') && h.includes('panchayat') && !h.includes('claim') && !h.includes('mukt') && !h.includes('tb free')) {
-      return 'Total GPs';
-    }
-    if (h.includes('claim')) return 'Claims submitted';
-    if (h.includes('after verification') || h.includes('qualified')) return 'Qualified GPs';
+    if (h === '%' || h.startsWith('%')) return '% Qualified';
+    if (h.startsWith('s. no') || h.startsWith('s no') || h === 's.no') return '#';
     if (h.includes('bronze')) return 'Bronze';
     if (h.includes('silver')) return 'Silver';
     if (h.includes('gold')) return 'Gold';
-    if (h.includes('tb free') || h.includes('2023')) return 'TB free 2023';
+    if (h.includes('claim')) return 'Claims submitted';
+    if (h.includes('after verification') || (h.includes('qualified') && h.includes('panchayat'))) {
+      return 'Qualified GPs';
+    }
+    if (h.includes('tb free') || (h.includes('declared') && h.includes('2023'))) return 'TB free 2023';
+    if (
+      (h.includes('total') && h.includes('panchayat')) ||
+      (h.includes('no of') && h.includes('gram panchayat')) ||
+      (h.includes('number of') && h.includes('panchayat') && h.includes('district') && !h.includes('claim') && !h.includes('qualified') && !h.includes('mukt'))
+    ) {
+      return 'Total GPs';
+    }
+    if (h.includes('district') || h.includes('name of the district') || h.includes('district name')) {
+      return 'District';
+    }
     return header;
   }
 
@@ -105,12 +159,13 @@ export class TuDirectoryComponent {
   }
 
   isPercent(header: string): boolean {
-    return header.trim() === '%';
+    const h = header.trim();
+    return h === '%' || h.toLowerCase().startsWith('%');
   }
 
   isTextHeader(header: string): boolean {
-    const h = header.toLowerCase();
-    return h.includes('name') || h.includes('district') || h.includes('status') || !header.trim();
+    const label = this.headerLabel(header).toLowerCase();
+    return label === 'district' || label === '#' || !header.trim();
   }
 
   isNum(value: Cell): boolean {
@@ -118,7 +173,7 @@ export class TuDirectoryComponent {
   }
 
   cellText(value: Cell, header: string): string {
-    if (value == null || value === '') return '';
+    if (value == null || value === '') return '—';
     if (typeof value === 'number') {
       if (this.isPercent(header)) {
         return `${value.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}%`;

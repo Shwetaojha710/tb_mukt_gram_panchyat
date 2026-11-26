@@ -6,46 +6,57 @@
     </div>
   </div>
 
-  <div class="toolbar panel">
-    <div class="year-chips" role="group" aria-label="Year">
-      <button
-        *ngFor="let b of books"
-        type="button"
-        class="year-chip"
-        [class.active]="year === b.year"
-        (click)="selectYear(b.year)"
+  <section class="panel main-panel" *ngIf="sheet as s; else emptyState">
+    <div class="toolbar">
+      <div class="year-chips" role="group" aria-label="Year">
+        <button
+          *ngFor="let b of books"
+          type="button"
+          class="year-chip"
+          [class.active]="year === b.year"
+          (click)="selectYear(b.year)"
+        >
+          {{ b.year }}
+        </button>
+      </div>
+
+      <select
+        *ngIf="(book?.sheets?.length || 0) > 1"
+        class="form-select form-select-sm view-select"
+        [ngModel]="sheetIndex"
+        (ngModelChange)="selectSheet($event)"
+        aria-label="View"
       >
-        {{ b.year }}
-      </button>
+        <option *ngFor="let sh of book?.sheets; let i = index" [ngValue]="i">{{ sheetLabel(sh.name) }}</option>
+      </select>
+
+      <div class="search-wrap">
+        <input
+          class="form-control form-control-sm"
+          type="search"
+          [ngModel]="query"
+          (ngModelChange)="onSearch($event)"
+          placeholder="Search district…"
+          aria-label="Search district"
+        />
+      </div>
+
+      <span class="meta-chip">{{ totalRows }} districts</span>
     </div>
 
-    <label class="view" *ngIf="(book?.sheets?.length || 0) > 1">
-      <span>View</span>
-      <select [ngModel]="sheetIndex" (ngModelChange)="selectSheet($event)">
-        <option *ngFor="let s of book?.sheets; let i = index" [ngValue]="i">{{ sheetLabel(s.name) }}</option>
-      </select>
-    </label>
-
-    <label class="search">
-      <span class="sr-only">Search</span>
-      <input type="search" [(ngModel)]="query" placeholder="Search district…" />
-    </label>
-    <span class="count" *ngIf="sheet">{{ rows.length }} districts</span>
-  </div>
-
-  <section class="panel table-panel" *ngIf="sheet as s">
-    <header>
+    <div class="title-row">
       <h2>{{ s.title || sheetLabel(s.name) }}</h2>
-    </header>
-    <div class="scroll">
-      <table>
+      <span class="page-chip">Page {{ page }} / {{ totalPages }}</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle data-table sticky-head sticky-cols">
         <thead>
           <tr>
             <th
-              *ngFor="let i of columns"
-              [class.num]="!isTextHeader(s.headers[i])"
-              [class.sticky]="i < 2"
-              [class.sticky-2]="i === 1"
+              *ngFor="let i of columns; let col = index"
+              [class.col-freeze]="col === 0"
+              [class.col-freeze-2]="col === 1"
               [title]="s.headers[i]"
             >
               {{ headerLabel(s.headers[i]) }}
@@ -53,21 +64,46 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let row of rows" [class.total]="isTotal(row)">
+          <tr *ngFor="let row of pageRows; let odd = odd" [class.total-row]="isTotal(row)" [class.zebra]="odd && !isTotal(row)">
             <td
-              *ngFor="let i of columns"
-              [class.num]="isNum(row[i])"
-              [class.sticky]="i < 2"
-              [class.sticky-2]="i === 1"
+              *ngFor="let i of columns; let col = index"
+              [class.col-freeze]="col === 0"
+              [class.col-freeze-2]="col === 1"
             >
               {{ cellText(row[i], s.headers[i] || '') }}
             </td>
           </tr>
-          <tr *ngIf="!rows.length">
+          <tr *ngIf="!pageRows.length">
             <td [attr.colspan]="columns.length" class="empty">No district matches “{{ query }}”.</td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <div class="pager">
+      <div class="pager-info">Showing {{ pageRows.length ? ((page - 1) * pageSize + 1) : 0 }}–{{ (page - 1) * pageSize + pageRows.length }} of {{ totalRows }}</div>
+      <div class="pager-actions">
+        <button class="btn btn-outline-secondary btn-sm" type="button" (click)="prevPage()" [disabled]="page <= 1">
+          Previous
+        </button>
+        <button
+          *ngFor="let p of pageNumbers"
+          type="button"
+          class="btn btn-sm page-btn"
+          [class.btn-primary]="p === page"
+          [class.btn-outline-secondary]="p !== page"
+          (click)="goToPage(p)"
+        >
+          {{ p }}
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" type="button" (click)="nextPage()" [disabled]="page >= totalPages">
+          Next
+        </button>
+      </div>
+    </div>
   </section>
+
+  <ng-template #emptyState>
+    <div class="panel empty-panel">No TBMP data available for this year.</div>
+  </ng-template>
 </div>
