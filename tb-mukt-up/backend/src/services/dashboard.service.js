@@ -211,22 +211,6 @@ async function getSummary(user, filters) {
     params
   );
 
-  const medals = await query(
-    `
-    SELECT
-      ISNULL(SUM(CASE WHEN q.medal = 'BRONZE' THEN 1 ELSE 0 END), 0) AS bronzeGps,
-      ISNULL(SUM(CASE WHEN q.medal = 'SILVER' THEN 1 ELSE 0 END), 0) AS silverGps,
-      ISNULL(SUM(CASE WHEN q.medal = 'GOLD' THEN 1 ELSE 0 END), 0) AS goldGps
-    FROM dbo.tb_mukt_qualification_history q
-    INNER JOIN (
-      SELECT DISTINCT gp_id, district_id, block_id, division_id FROM dbo.tb_mukt_entries e
-      WHERE ${baseWhere} AND e.reporting_year = @qYear AND e.reporting_month BETWEEN 1 AND @reportingMonth
-    ) e ON e.gp_id = q.gp_id
-    WHERE q.year = @qYear
-    `,
-    baseParams
-  );
-
   const districtMedalPerformance = await query(
     `
     SELECT
@@ -363,12 +347,13 @@ async function getSummary(user, filters) {
     scopeNoYearParams
   );
 
-  // Overview-parity GP metrics (same definitions as newDashboard cards) for Block/District/State views.
-  // Pending = max(0, CEILING(pop*30/1000) - tests) ? NOT sum of monthly testing_pending rows.
+  // Overview-parity KPIs ? same definitions as newDashboard AGG_COLUMNS / getMasterTotals.
   const overviewParity = await query(
     `
     SELECT
       COUNT(*) AS reportingGps,
+      COUNT(DISTINCT g.district_id) AS reportingDistricts,
+      COUNT(DISTINCT g.block_id) AS reportingBlocks,
       ISNULL(SUM(CASE WHEN g.pop > 0 AND g.cases * 1000.0 <= g.pop THEN 1 ELSE 0 END), 0) AS eligibleGps,
       ISNULL(SUM(
         CASE
@@ -379,6 +364,9 @@ async function getSummary(user, filters) {
           THEN 1 ELSE 0
         END
       ), 0) AS overviewQualifiedGps,
+      ISNULL(SUM(CASE WHEN g.award = 'BRONZE' THEN 1 ELSE 0 END), 0) AS bronzeGps,
+      ISNULL(SUM(CASE WHEN g.award = 'SILVER' THEN 1 ELSE 0 END), 0) AS silverGps,
+      ISNULL(SUM(CASE WHEN g.award = 'GOLD' THEN 1 ELSE 0 END), 0) AS goldGps,
       ISNULL(SUM(CASE WHEN g.pending BETWEEN 1 AND 50 THEN 1 ELSE 0 END), 0) AS pendingBelow50,
       ISNULL(SUM(CASE WHEN g.pending > 50 THEN 1 ELSE 0 END), 0) AS pendingAbove50Gps,
       ISNULL(SUM(CASE WHEN g.cases = 0 THEN 1 ELSE 0 END), 0) AS zeroCaseGps,
@@ -387,6 +375,8 @@ async function getSummary(user, filters) {
     FROM (
       SELECT
         e.gp_id,
+        MAX(e.district_id) AS district_id,
+        MAX(e.block_id) AS block_id,
         ISNULL(MAX(e.gp_population), 0) AS pop,
         ISNULL(SUM(e.tested_naat), 0) AS tests,
         ISNULL(SUM(e.tb_diagnosed), 0) AS cases,
@@ -400,8 +390,14 @@ async function getSummary(user, filters) {
           WHEN ISNULL(SUM(e.poshan_consented), 0) > ISNULL(SUM(e.poshan_received), 0)
           THEN ISNULL(SUM(e.poshan_consented), 0) - ISNULL(SUM(e.poshan_received), 0)
           ELSE 0
-        END AS poshanPending
+        END AS poshanPending,
+        CASE
+          WHEN MAX(q.medal) IN ('BRONZE', 'SILVER', 'GOLD') THEN MAX(q.medal)
+          ELSE 'NOT_QUALIFIED'
+        END AS award
       FROM dbo.tb_mukt_entries e
+      LEFT JOIN dbo.tb_mukt_qualification_history q
+        ON q.gp_id = e.gp_id AND q.year = @qYear
       WHERE ${baseWhere}
         AND e.reporting_year = @qYear
         AND e.reporting_month BETWEEN 1 AND @reportingMonth
@@ -411,45 +407,48 @@ async function getSummary(user, filters) {
     baseParams
   );
 
-  // Master geography totals (location master) ? mirrors Overview Total Districts/Blocks/GPs.
-  const masterWhere = ['ISNULL(g.IsDeleted,0)=0'];
-  const masterParams = { ...baseParams };
-  if (masterParams.scopeDistrictId || masterParams.districtId) {
-    masterWhere.push('g.Fk_DistrictId = @masterDistrictId');
-    masterParams.masterDistrictId = masterParams.scopeDistrictId || masterParams.districtId;
+  // Exact same master totals as Overview (newDashboard.getMasterTotals).
+  const masterParams = {};
+  const districtFilter = ['ISNULL(d.IsDeleted, 0) = 0'];
+  const blockFilter = ['ISNULL(b.IsDeleted, 0) = 0'];
+  const gpFilter = ['ISNULL(g.IsDeleted, 0) = 0'];
+  const scopeDistrictId = baseParams.scopeDistrictId || baseParams.districtId;
+  const scopeBlockId = baseParams.scopeBlockId || baseParams.blockId;
+  if (baseParams.scopeDivisionId || baseParams.divisionId) {
+    masterParams.divisionId = baseParams.scopeDivisionId || baseParams.divisionId;
+    districtFilter.push('d.FK_DivisionID = @divisionId');
+    blockFilter.push('b.FK_DivisionID = @divisionId');
+    gpFilter.push('g.FK_DivisionID = @divisionId');
   }
-  if (masterParams.scopeBlockId || masterParams.blockId) {
-    masterWhere.push('g.Fk_BlockId = @masterBlockId');
-    masterParams.masterBlockId = masterParams.scopeBlockId || masterParams.blockId;
+  if (scopeDistrictId) {
+    masterParams.districtId = scopeDistrictId;
+    districtFilter.push('d.PK_UniqueID = @districtId');
+    blockFilter.push('b.FK_DistrictID = @districtId');
+    gpFilter.push('g.FK_DistrictID = @districtId');
+  }
+  if (scopeBlockId) {
+    masterParams.blockId = scopeBlockId;
+    blockFilter.push('b.PK_UniqueID = @blockId');
+    gpFilter.push('g.FK_BlockID = @blockId');
   }
   const masterCounts = await query(
     `
     SELECT
-      (SELECT COUNT(DISTINCT d.PK_UniqueID)
-       FROM dbo.District d
-       INNER JOIN dbo.GramPanchayat gx ON gx.Fk_DistrictId = d.PK_UniqueID
-       WHERE ISNULL(d.IsDeleted,0)=0 AND ISNULL(gx.IsDeleted,0)=0
-         ${masterParams.masterDistrictId ? 'AND d.PK_UniqueID = @masterDistrictId' : ''}
-         ${masterParams.masterBlockId ? 'AND gx.Fk_BlockId = @masterBlockId' : ''}
-      ) AS totalDistricts,
-      (SELECT COUNT(DISTINCT b.PK_UniqueID)
-       FROM dbo.Block b
-       INNER JOIN dbo.GramPanchayat gx ON gx.Fk_BlockId = b.PK_UniqueID
-       WHERE ISNULL(b.IsDeleted,0)=0 AND ISNULL(gx.IsDeleted,0)=0
-         ${masterParams.masterDistrictId ? 'AND b.Fk_DistrictId = @masterDistrictId' : ''}
-         ${masterParams.masterBlockId ? 'AND b.PK_UniqueID = @masterBlockId' : ''}
-      ) AS totalBlocks,
-      (SELECT COUNT(*) FROM dbo.GramPanchayat g WHERE ${masterWhere.join(' AND ')}) AS totalGpsMaster
+      (SELECT COUNT(*) FROM dbo.District d WHERE ${districtFilter.join(' AND ')}) AS totalDistricts,
+      (SELECT COUNT(*) FROM dbo.Block b WHERE ${blockFilter.join(' AND ')}) AS totalBlocks,
+      (SELECT COUNT(*) FROM dbo.GramPanchayat g WHERE ${gpFilter.join(' AND ')}) AS totalGpsMaster
     `,
     masterParams
   );
+
+  const parity = overviewParity.recordset[0] || {};
+  const master = masterCounts.recordset[0] || {};
 
   return {
     reportingMonth,
     year,
     kpis: {
       ...kpi.recordset[0],
-      ...medals.recordset[0],
       ...pendingBuckets.recordset[0],
       ...previousYearMedals.recordset[0],
       ...monthKpi.recordset[0],
@@ -457,12 +456,12 @@ async function getSummary(user, filters) {
       ...previousYearTesting.recordset[0],
       ...districtMedalPerformance.recordset[0],
       ...blockMedalPerformance.recordset[0],
-      ...overviewParity.recordset[0],
-      ...masterCounts.recordset[0],
-      // Prefer Overview naming for pending-above-50 GP count when present
-      pendingAbove50:
-        overviewParity.recordset[0]?.pendingAbove50Gps ??
-        pendingBuckets.recordset[0]?.bucketAbove50,
+      // Overview values win for shared card names (bronze/eligible/totals/etc.)
+      ...parity,
+      ...master,
+      totalGps: master.totalGpsMaster,
+      pendingAbove50: parity.pendingAbove50Gps ?? pendingBuckets.recordset[0]?.bucketAbove50,
+      overviewQualifiedGps: parity.overviewQualifiedGps,
     },
     monthly: monthly.recordset,
     cumulativeYtd: cumulative.recordset[0],

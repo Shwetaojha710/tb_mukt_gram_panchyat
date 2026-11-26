@@ -11,7 +11,9 @@
     <div class="row g-2 align-items-end filters-row">
       <div class="col-6 col-md-2">
         <label class="form-label">Year</label>
-        <input type="number" class="form-control form-control-sm" [(ngModel)]="year" />
+        <select class="form-select form-select-sm" [(ngModel)]="year" (ngModelChange)="load(true)">
+          <option *ngFor="let y of years" [ngValue]="y">{{ y }}</option>
+        </select>
       </div>
       <div class="col-6 col-md-2">
         <label class="form-label">Month</label>

@@ -36,7 +36,8 @@ export class TbEntryListComponent implements OnInit {
   lockDistrict = false;
   lockBlock = false;
   editDeadlineDay = 15;
-submitDeadlineDay = 10;
+  submitDeadlineDay = 10;
+  years = [2026, 2025, 2024];
   months = [
     { id: 1, name: 'January' }, { id: 2, name: 'February' }, { id: 3, name: 'March' },
     { id: 4, name: 'April' }, { id: 5, name: 'May' }, { id: 6, name: 'June' },

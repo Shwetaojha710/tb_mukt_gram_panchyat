@@ -82,14 +82,16 @@
       <div class="stat-card">
         <span>Total Districts</span>
         <strong>{{ fmt(s.kpis.totalDistricts) }}</strong>
+        <em class="card-sub">{{ fmt(s.kpis.reportingDistricts) }} reporting</em>
       </div>
       <div class="stat-card">
         <span>Total Blocks</span>
         <strong>{{ fmt(s.kpis.totalBlocks) }}</strong>
+        <em class="card-sub">{{ fmt(s.kpis.reportingBlocks) }} reporting</em>
       </div>
       <div class="stat-card">
         <span>Total GPs</span>
-        <strong>{{ fmt(s.kpis.totalGpsMaster) }}</strong>
+        <strong>{{ fmt(s.kpis.totalGpsMaster || s.kpis.totalGps) }}</strong>
         <em class="card-sub">{{ fmt(s.kpis.reportingGps) }} reporting</em>
       </div>
       <div class="stat-card">
@@ -131,26 +133,6 @@
       <div class="stat-card warn">
         <span>Poshan Potli Pending</span>
         <strong>{{ fmt(s.kpis.poshanPendingGps) }}</strong>
-      </div>
-      <div class="stat-card">
-        <span>Presumptive tests (YTD)</span>
-        <strong>{{ fmt(s.kpis.testedNaatYtd) }}</strong>
-      </div>
-      <div class="stat-card">
-        <span>Prev. year tests (YTD)</span>
-        <strong>{{ fmt(s.kpis.testedNaatPrevYtd) }}</strong>
-      </div>
-      <div class="stat-card bronze">
-        <span>Prev. year Bronze</span>
-        <strong>{{ fmt(s.kpis.prevBronzeGps) }}</strong>
-      </div>
-      <div class="stat-card silver">
-        <span>Prev. year Silver</span>
-        <strong>{{ fmt(s.kpis.prevSilverGps) }}</strong>
-      </div>
-      <div class="stat-card gold">
-        <span>Prev. year Gold</span>
-        <strong>{{ fmt(s.kpis.prevGoldGps) }}</strong>
       </div>
     </div>
 
