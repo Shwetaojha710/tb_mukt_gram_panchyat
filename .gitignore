@@ -1,1 +1,10 @@
-/tb-mukt-up
+# Dependencies, build output, and secrets only.
+# Source under tb-mukt-up must stay trackable, or new pages break CI.
+node_modules/
+dist/
+.angular/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
