@@ -10,6 +10,51 @@
   min-width: 0;
 }
 
+.f-years {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.year-chips {
+  display: inline-flex;
+  gap: 0.28rem;
+  padding: 2px;
+  border-radius: 10px;
+  background: #eef3f7;
+}
+
+.year-chip {
+  min-width: 3.4rem;
+  min-height: 28px;
+  padding: 0.2rem 0.55rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #3a5568;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.year-chip:hover:not(:disabled) {
+  background: #fff;
+  color: #16384f;
+}
+
+.year-chip.active {
+  background: #16384f;
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(22, 56, 79, 0.2);
+}
+
+.year-chip:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
 .f-period {
   width: 12.5rem;
 }
@@ -54,11 +99,22 @@
 }
 
 @media (max-width: 700px) {
+  .f-years,
   .f-period,
   .f-select,
   .f-actions {
     width: 100%;
     flex: 1 1 100%;
+  }
+
+  .year-chips {
+    width: 100%;
+  }
+
+  .year-chip {
+    flex: 1;
+    min-height: 40px;
+    font-size: 0.95rem;
   }
 
   .f-actions .btn {

@@ -34,8 +34,10 @@ export class NdFiltersComponent implements OnInit, OnChanges {
   @Output() apply = new EventEmitter<NdFilters>();
   @Output() reset = new EventEmitter<void>();
 
-  readonly minYear = 2023;
-  readonly maxYear = new Date().getFullYear();
+  /** Only years with imported / live TBMP data — keeps queries lean. */
+  readonly years = [2024, 2025, 2026] as const;
+  readonly minYear = 2024;
+  readonly maxYear = 2026;
 
   draft!: NdFilters;
   districts: LocationItem[] = [];
@@ -103,6 +105,27 @@ export class NdFiltersComponent implements OnInit, OnChanges {
 
   onGp(raw: string) {
     this.draft.gpId = this.toId(raw);
+  }
+
+  /** Active chip when From–To is within a single year (Jan → year-end / current month). */
+  isYearActive(year: number): boolean {
+    return this.draft?.fromYear === year && this.draft?.toYear === year;
+  }
+
+  /** One tap → one year → one API load (no multi-year merge). */
+  selectYear(year: number) {
+    if (this.loading) return;
+    const now = new Date();
+    const toMonth = year === now.getFullYear() ? now.getMonth() + 1 : 12;
+    this.draft = {
+      ...this.draft,
+      fromYear: year,
+      fromMonth: 1,
+      toYear: year,
+      toMonth,
+    };
+    this.error = '';
+    this.apply.emit({ ...this.draft });
   }
 
   submit() {

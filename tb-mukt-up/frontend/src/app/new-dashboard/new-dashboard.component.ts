@@ -310,15 +310,18 @@ export class NewDashboardComponent implements OnInit {
     const u = this.auth.currentUser();
     const role = String(u?.role || '').toUpperCase();
     const now = new Date();
+    // Overview ships with 2024–2026 only; default to current year in that set.
+    const year = Math.min(2026, Math.max(2024, now.getFullYear()));
+    const toMonth = year === now.getFullYear() ? now.getMonth() + 1 : 12;
     const districtId = role === 'DISTRICT' || role === 'BLOCK' || role === 'TEHSIL' ? u?.districtId || null : null;
     const blockId = role === 'BLOCK' || role === 'TEHSIL' ? u?.blockId || u?.tehsilId || null : null;
     this.lockDistrict = !!districtId;
     this.lockBlock = !!blockId;
     return {
-      fromYear: now.getFullYear(),
+      fromYear: year,
       fromMonth: 1,
-      toYear: now.getFullYear(),
-      toMonth: now.getMonth() + 1,
+      toYear: year,
+      toMonth,
       districtId,
       blockId,
       gpId: null,
