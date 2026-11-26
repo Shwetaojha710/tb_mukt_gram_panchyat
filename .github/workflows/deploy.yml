@@ -189,6 +189,6 @@ jobs:
             fi
             RESTART_CMD='${{ secrets.DEPLOY_RESTART_CMD }}'
             if [ -z "$RESTART_CMD" ]; then
-              RESTART_CMD='pm2 restart tbmukt-api || pm2 restart all'
+              RESTART_CMD='pm2 restart tbmukht'
             fi
             eval "$RESTART_CMD"

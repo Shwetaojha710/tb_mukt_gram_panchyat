@@ -23,7 +23,7 @@ Production site: `https://tbmukht.demoquaeretech.in`
 | `DEPLOY_PORT` | `22` | No (default 22) |
 | `DEPLOY_FRONTEND_PATH` | `/var/www/html/tbmukht.demoquaeretech.in/dist/frontend/browser` | Yes |
 | `DEPLOY_BACKEND_PATH` | `/var/www/html/tbmukht.demoquaeretech.in/api` | Yes |
-| `DEPLOY_RESTART_CMD` | `pm2 restart tbmukt-api` | No |
+| `DEPLOY_RESTART_CMD` | `pm2 restart tbmukht` | No |
 
 \* Use **either** `DEPLOY_PASSWORD` **or** `DEPLOY_SSH_KEY`.
 
@@ -66,7 +66,7 @@ npm ci --omit=dev
   cd <DEPLOY_BACKEND_PATH>
   npm ci --omit=dev
   # ensure .env exists with MSSQL_* and JWT_SECRET
-  pm2 start server.js --name tbmukt-api   # or your process manager / IIS node handler
+  pm2 start server.js --name tbmukht   # or your process manager / IIS node handler
   ```
 - Frontend is static files — point IIS / nginx document root to `DEPLOY_FRONTEND_PATH`.
 
